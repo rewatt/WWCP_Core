@@ -1,3 +1,3 @@
 # World Wide Charging Protocol - Core
 
-The purpose of the World Wide Charging Protocol is to connect market actors in the field of e-mobility via scalable and secure Internet protocols.
+The World Wide Charging Protocol Suite is a collection of protocols in order to connect market actors in the field of e-mobility solutions via scalable and secure Internet protocols. 
