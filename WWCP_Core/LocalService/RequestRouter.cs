@@ -22,11 +22,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using org.GraphDefined.Vanaheimr.Illias;
-using org.GraphDefined.Vanaheimr.Illias.ConsoleLog;
-using org.GraphDefined.Vanaheimr.Hermod;
 using org.GraphDefined.Vanaheimr.Hermod.HTTP;
-using org.GraphDefined.Vanaheimr.Hermod.Services.DNS;
 
 #endregion
 
@@ -119,8 +115,6 @@ namespace org.GraphDefined.WWCP.LocalService
 
         #region OnRemoteStart
 
-        public delegate RemoteStartResult OnRemoteStartDelegate(EVSE_Id EVSEId, ChargingSession_Id SessionId, EVSP_Id ProviderId, eMA_Id eMAId, EventTracking_Id EventTrackingId = null);
-
         /// <summary>
         /// An event fired whenever a remote start command was received.
         /// </summary>
@@ -129,8 +123,6 @@ namespace org.GraphDefined.WWCP.LocalService
         #endregion
 
         #region OnRemoteStop
-
-        public delegate RemoteStopResult OnRemoteStopDelegate(EVSE_Id EVSEId, ChargingSession_Id SessionId, EVSP_Id ProviderId, EventTracking_Id EventTrackingId = null);
 
         /// <summary>
         /// An event fired whenever a remote stop command was received.
@@ -147,6 +139,29 @@ namespace org.GraphDefined.WWCP.LocalService
         /// An event fired whenever a CDR needs to be filtered.
         /// </summary>
         public event OnFilterCDRRecordsDelegate OnFilterCDRRecords;
+
+        #endregion
+
+
+        #region OnChargingPoolAdminDiff
+
+        public delegate void OnChargingPoolAdminDiffDelegate(ChargingPoolAdminStatusDiff StatusDiff);
+
+        /// <summary>
+        /// An event fired whenever a charging station admin status diff was received.
+        /// </summary>
+        public event OnChargingPoolAdminDiffDelegate OnChargingPoolAdminDiff;
+
+        #endregion
+
+        #region OnChargingStationAdminDiff
+
+        public delegate void OnChargingStationAdminDiffDelegate(ChargingStationAdminStatusDiff StatusDiff);
+
+        /// <summary>
+        /// An event fired whenever a charging station admin status diff was received.
+        /// </summary>
+        public event OnChargingStationAdminDiffDelegate OnChargingStationAdminDiff;
 
         #endregion
 
@@ -220,10 +235,10 @@ namespace org.GraphDefined.WWCP.LocalService
 
             AuthorizeStart(EVSEOperator_Id     OperatorId,
                            Auth_Token          AuthToken,
-                           EVSE_Id             EVSEId            = null,   // OICP v2.0: Optional
-                           ChargingSession_Id  SessionId         = null,   // OICP v2.0: Optional
-                           String              PartnerProductId  = null,   // OICP v2.0: Optional [100]
-                           ChargingSession_Id  PartnerSessionId  = null,   // OICP v2.0: Optional [50]
+                           EVSE_Id             EVSEId            = null,
+                           ChargingSession_Id  SessionId         = null,
+                           ChargingProduct_Id  PartnerProductId  = null,
+                           ChargingSession_Id  PartnerSessionId  = null,
                            TimeSpan?           QueryTimeout      = null)
 
         {
@@ -425,7 +440,7 @@ namespace org.GraphDefined.WWCP.LocalService
         /// <param name="QueryTimeout">An optional timeout for this query.</param>
         public async Task<HTTPResponse<SENDCDRResult>>
 
-            SendCDR(EVSE_Id              EVSEId,
+            SendChargeDetailRecord(EVSE_Id              EVSEId,
                     ChargingSession_Id   SessionId,
                     ChargingProduct_Id   PartnerProductId,
                     DateTime             SessionStart,
@@ -495,7 +510,7 @@ namespace org.GraphDefined.WWCP.LocalService
                 if (SessionIdAuthenticatorCache.TryGetValue(SessionId, out AuthenticationService))
                 {
 
-                    var _Task = AuthenticationService.SendCDR(EVSEId,
+                    var _Task = AuthenticationService.SendChargeDetailRecord(EVSEId,
                                                               SessionId,
                                                               PartnerProductId,
                                                               SessionStart,
@@ -534,7 +549,7 @@ namespace org.GraphDefined.WWCP.LocalService
                                                                ToArray())
                 {
 
-                    var _Task = OtherAuthenticationService.SendCDR(EVSEId,
+                    var _Task = OtherAuthenticationService.SendChargeDetailRecord(EVSEId,
                                                                    SessionId,
                                                                    PartnerProductId,
                                                                    SessionStart,
@@ -583,21 +598,29 @@ namespace org.GraphDefined.WWCP.LocalService
         #endregion
 
 
-        #region RemoteStart(EVSEId, SessionId, ProviderId, eMAId, EventTrackingId = null)
+        #region RemoteStart(Timestamp, RoamingNetworkId, SessionId, PartnerSessionId, ProviderId, eMAId, EVSEId, ChargingProductId)
 
         /// <summary>
-        /// Initiate a remote start of a charging station socket outlet.
+        /// Initiate a remote start of the given charging session at the given EVSE
+        /// and for the given Provider/eMAId.
         /// </summary>
-        /// <param name="EVSEId">The unique identification of an EVSE.</param>
+        /// <param name="Timestamp">The timestamp of the request.</param>
+        /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
         /// <param name="SessionId">The unique identification for this charging session.</param>
+        /// <param name="PartnerSessionId">The unique identification for this charging session on the partner side.</param>
         /// <param name="ProviderId">The unique identification of the e-mobility service provider.</param>
         /// <param name="eMAId">The unique identification of the e-mobility account.</param>
-        /// <param name="EventTrackingId">An optional unique identification for tracking related events.</param>
-        public RemoteStartResult RemoteStart(EVSE_Id             EVSEId,
+        /// <param name="EVSEId">The unique identification of an EVSE.</param>
+        /// <param name="ChargingProductId">The unique identification of the choosen charging product at the given EVSE.</param>
+        /// <returns>A remote start result object.</returns>
+        public RemoteStartResult RemoteStart(DateTime            Timestamp,
+                                             RoamingNetwork_Id   RoamingNetworkId,
                                              ChargingSession_Id  SessionId,
+                                             ChargingSession_Id  PartnerSessionId,
                                              EVSP_Id             ProviderId,
                                              eMA_Id              eMAId,
-                                             EventTracking_Id    EventTrackingId = null)
+                                             EVSE_Id             EVSEId,
+                                             ChargingProduct_Id  ChargingProductId)
         {
 
             lock (AuthenticationServices)
@@ -605,7 +628,14 @@ namespace org.GraphDefined.WWCP.LocalService
 
                 var OnRemoteStartLocal = OnRemoteStart;
                 if (OnRemoteStartLocal != null)
-                    return OnRemoteStartLocal(EVSEId, SessionId, ProviderId, eMAId, EventTrackingId);
+                    return OnRemoteStartLocal(Timestamp,
+                                              RoamingNetworkId,
+                                              SessionId,
+                                              PartnerSessionId,
+                                              ProviderId,
+                                              eMAId,
+                                              EVSEId,
+                                              ChargingProductId);
 
                 return RemoteStartResult.Error;
 
@@ -615,19 +645,24 @@ namespace org.GraphDefined.WWCP.LocalService
 
         #endregion
 
-        #region RemoteStop(EVSEId, SessionId, ProviderId, EventTrackingId = null)
+        #region RemoteStop(Timestamp, RoamingNetworkId, SessionId, PartnerSessionId, ProviderId, EVSEId)
 
         /// <summary>
-        /// Initiate a remote stop of a charging station socket outlet.
+        /// Initiate a remote stop of the given charging session at the given EVSE.
         /// </summary>
-        /// <param name="EVSEId">The unique identification of an EVSE.</param>
+        /// <param name="Timestamp">The timestamp of the request.</param>
+        /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
         /// <param name="SessionId">The unique identification for this charging session.</param>
+        /// <param name="PartnerSessionId">The unique identification for this charging session on the partner side.</param>
         /// <param name="ProviderId">The unique identification of the e-mobility service provider.</param>
-        /// <param name="EventTrackingId">An optional unique identification for tracking related events.</param>
-        public RemoteStopResult RemoteStop(EVSE_Id             EVSEId,
+        /// <param name="EVSEId">The unique identification of an EVSE.</param>
+        /// <returns>A remote stop result object.</returns>
+        public RemoteStopResult RemoteStop(DateTime            Timestamp,
+                                           RoamingNetwork_Id   RoamingNetworkId,
                                            ChargingSession_Id  SessionId,
+                                           ChargingSession_Id  PartnerSessionId,
                                            EVSP_Id             ProviderId,
-                                           EventTracking_Id    EventTrackingId  = null)
+                                           EVSE_Id             EVSEId)
         {
 
             lock (AuthenticationServices)
@@ -635,7 +670,12 @@ namespace org.GraphDefined.WWCP.LocalService
 
                 var OnRemoteStopLocal = OnRemoteStop;
                 if (OnRemoteStopLocal != null)
-                    return OnRemoteStopLocal(EVSEId, SessionId, ProviderId, EventTrackingId);
+                    return OnRemoteStopLocal(Timestamp,
+                                             RoamingNetworkId,
+                                             SessionId,
+                                             PartnerSessionId,
+                                             ProviderId,
+                                             EVSEId);
 
                 return RemoteStopResult.Error;
 
@@ -645,6 +685,50 @@ namespace org.GraphDefined.WWCP.LocalService
 
         #endregion
 
+
+        #region SendChargingPoolAdminStatusDiff(StatusDiff)
+
+        public void SendChargingPoolAdminStatusDiff(ChargingPoolAdminStatusDiff StatusDiff)
+        {
+
+            lock (AuthenticationServices)
+            {
+
+                var OnChargingPoolAdminDiffLocal = OnChargingPoolAdminDiff;
+                if (OnChargingPoolAdminDiffLocal != null)
+                    OnChargingPoolAdminDiffLocal(StatusDiff);
+
+                //return RemoteStartResult.Error;
+
+            }
+
+            //return StatusDiff;
+
+        }
+
+        #endregion
+
+        #region SendChargingStationAdminStatusDiff(StatusDiff)
+
+        public void SendChargingStationAdminStatusDiff(ChargingStationAdminStatusDiff StatusDiff)
+        {
+
+            lock (AuthenticationServices)
+            {
+
+                var OnChargingStationAdminDiffLocal = OnChargingStationAdminDiff;
+                if (OnChargingStationAdminDiffLocal != null)
+                    OnChargingStationAdminDiffLocal(StatusDiff);
+
+                //return RemoteStartResult.Error;
+
+            }
+
+            //return StatusDiff;
+
+        }
+
+        #endregion
 
         #region SendEVSEStatusDiff(StatusDiff)
 
