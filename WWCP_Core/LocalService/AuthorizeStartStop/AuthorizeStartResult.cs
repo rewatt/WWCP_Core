@@ -18,13 +18,16 @@
 namespace org.GraphDefined.WWCP.LocalService
 {
 
-    public enum RemoteStartResult
+    public enum AuthorizeStartResult
     {
         Error,
         Success,
         EVSE_NotReachable,
         SessionId_AlreadyInUse,
         EVSE_AlreadyInUse,
+        UnknownEVSE,
+        EVSEReserved,
+        EVSEOutOfService,
         Start_Timeout
     }
 
