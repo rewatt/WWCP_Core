@@ -19,9 +19,12 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+using org.GraphDefined.Vanaheimr.Illias;
+using org.GraphDefined.Vanaheimr.Hermod;
 using org.GraphDefined.Vanaheimr.Hermod.HTTP;
 
 #endregion
@@ -75,6 +78,22 @@ namespace org.GraphDefined.WWCP.LocalService
         }
 
         #endregion
+
+
+        #region ChargingReservations
+
+        private readonly Dictionary<ChargingReservation_Id, ChargingReservation> _ChargingReservations;
+
+        public IEnumerable<ChargingReservation> ChargingReservations
+        {
+            get
+            {
+                return _ChargingReservations.Select(kvp => kvp.Value);
+            }
+        }
+
+        #endregion
+
 
 
         public IEnumerable<KeyValuePair<Auth_Token, AuthorizationResult>> AllTokens
@@ -133,7 +152,7 @@ namespace org.GraphDefined.WWCP.LocalService
 
         #region OnFilterCDRRecords
 
-        public delegate SENDCDRResult OnFilterCDRRecordsDelegate(Authorizator_Id AuthorizatorId, Auth_Token AuthToken, eMA_Id eMAId, ChargingSession_Id PartnerSessionId);
+        public delegate SENDCDRResult OnFilterCDRRecordsDelegate(Authorizator_Id AuthorizatorId, AuthInfo AuthInfo, ChargingSession_Id PartnerSessionId);
 
         /// <summary>
         /// An event fired whenever a CDR needs to be filtered.
@@ -186,9 +205,11 @@ namespace org.GraphDefined.WWCP.LocalService
 
             this._RoamingNetwork              = RoamingNetwork;
             this._AuthorizatorId              = (AuthorizatorId == null) ? Authorizator_Id.Parse("GraphDefined E-Mobility Gateway") : AuthorizatorId;
-            this.AuthenticationServices       = new Dictionary<UInt32,             IAuthServices>();
-            this.SessionIdAuthenticatorCache  = new Dictionary<ChargingSession_Id, IAuthServices>();
-            this.EVSEOperatorLookup           = new Dictionary<EVSEOperator_Id,    IRemoteStartStop>();
+            this.AuthenticationServices       = new Dictionary<UInt32,                 IAuthServices>();
+            this.SessionIdAuthenticatorCache  = new Dictionary<ChargingSession_Id,     IAuthServices>();
+            this.EVSEOperatorLookup           = new Dictionary<EVSEOperator_Id,        IRemoteStartStop>();
+
+            this._ChargingReservations        = new Dictionary<ChargingReservation_Id, ChargingReservation>();
 
         }
 
@@ -416,7 +437,7 @@ namespace org.GraphDefined.WWCP.LocalService
 
         #endregion
 
-        #region SendCDR(EVSEId, SessionId, PartnerProductId, SessionStart, SessionEnd, AuthToken = null, eMAId = null, PartnerSessionId = null, ..., QueryTimeout = null)
+        #region SendChargeDetailRecord(EVSEId, SessionId, PartnerProductId, SessionStart, SessionEnd, AuthToken = null, eMAId = null, PartnerSessionId = null, ..., QueryTimeout = null)
 
         /// <summary>
         /// Create a SendChargeDetailRecord request.
@@ -429,7 +450,8 @@ namespace org.GraphDefined.WWCP.LocalService
         /// <param name="AuthToken">An optional (RFID) user identification.</param>
         /// <param name="eMAId">An optional e-Mobility account identification.</param>
         /// <param name="PartnerSessionId">An optional partner session identification.</param>
-        /// <param name="ChargingTime">Optional timestamps of the charging start/stop.</param>
+        /// <param name="ChargingStart">An optional charging start timestamp.</param>
+        /// <param name="ChargingEnd">An optional charging end timestamp.</param>
         /// <param name="MeterValueStart">An optional initial value of the energy meter.</param>
         /// <param name="MeterValueEnd">An optional final value of the energy meter.</param>
         /// <param name="MeterValuesInBetween">An optional enumeration of meter values during the charging session.</param>
@@ -445,8 +467,7 @@ namespace org.GraphDefined.WWCP.LocalService
                                    ChargingProduct_Id   PartnerProductId,
                                    DateTime             SessionStart,
                                    DateTime             SessionEnd,
-                                   Auth_Token           AuthToken             = null,
-                                   eMA_Id               eMAId                 = null,
+                                   AuthInfo             AuthInfo,
                                    ChargingSession_Id   PartnerSessionId      = null,
                                    DateTime?            ChargingStart         = null,
                                    DateTime?            ChargingEnd           = null,
@@ -455,7 +476,7 @@ namespace org.GraphDefined.WWCP.LocalService
                                    IEnumerable<Double>  MeterValuesInBetween  = null,
                                    Double?              ConsumedEnergy        = null,
                                    String               MeteringSignature     = null,
-                                   EVSEOperator_Id      HubOperatorId         = null,
+                                   HubOperator_Id       HubOperatorId         = null,
                                    EVSP_Id              HubProviderId         = null,
                                    TimeSpan?            QueryTimeout          = null)
 
@@ -478,9 +499,8 @@ namespace org.GraphDefined.WWCP.LocalService
             if (SessionEnd       == null)
                 throw new ArgumentNullException("SessionEnd",        "The given parameter must not be null!");
 
-            if (AuthToken        == null &&
-                eMAId            == null)
-                throw new ArgumentNullException("AuthToken / eMAId", "At least one of the given parameters must not be null!");
+            if (AuthInfo         == null)
+                throw new ArgumentNullException("AuthInfo",          "The given parameter must not be null!");
 
             #endregion
 
@@ -493,7 +513,7 @@ namespace org.GraphDefined.WWCP.LocalService
                 if (OnFilterCDRRecordsLocal != null)
                 {
 
-                    var _SENDCDRResult = OnFilterCDRRecordsLocal(AuthorizatorId, AuthToken, eMAId, PartnerSessionId);
+                    var _SENDCDRResult = OnFilterCDRRecordsLocal(AuthorizatorId, AuthInfo, PartnerSessionId);
 
                     if (_SENDCDRResult != null)
                         return new HTTPResponse<SENDCDRResult>(new HTTPResponse(),
@@ -511,23 +531,22 @@ namespace org.GraphDefined.WWCP.LocalService
                 {
 
                     var _Task = AuthenticationService.SendChargeDetailRecord(EVSEId,
-                                                              SessionId,
-                                                              PartnerProductId,
-                                                              SessionStart,
-                                                              SessionEnd,
-                                                              AuthToken,
-                                                              eMAId,
-                                                              PartnerSessionId,
-                                                              ChargingStart,
-                                                              ChargingEnd,
-                                                              MeterValueStart,
-                                                              MeterValueEnd,
-                                                              MeterValuesInBetween,
-                                                              ConsumedEnergy,
-                                                              MeteringSignature,
-                                                              HubOperatorId,
-                                                              HubProviderId,
-                                                              QueryTimeout);
+                                                                             SessionId,
+                                                                             PartnerProductId,
+                                                                             SessionStart,
+                                                                             SessionEnd,
+                                                                             AuthInfo,
+                                                                             PartnerSessionId,
+                                                                             ChargingStart,
+                                                                             ChargingEnd,
+                                                                             MeterValueStart,
+                                                                             MeterValueEnd,
+                                                                             MeterValuesInBetween,
+                                                                             ConsumedEnergy,
+                                                                             MeteringSignature,
+                                                                             HubOperatorId,
+                                                                             HubProviderId,
+                                                                             QueryTimeout);
 
                     _Task.Wait();
 
@@ -550,23 +569,22 @@ namespace org.GraphDefined.WWCP.LocalService
                 {
 
                     var _Task = OtherAuthenticationService.SendChargeDetailRecord(EVSEId,
-                                                                   SessionId,
-                                                                   PartnerProductId,
-                                                                   SessionStart,
-                                                                   SessionEnd,
-                                                                   AuthToken,
-                                                                   eMAId,
-                                                                   PartnerSessionId,
-                                                                   ChargingStart,
-                                                                   ChargingEnd,
-                                                                   MeterValueStart,
-                                                                   MeterValueEnd,
-                                                                   MeterValuesInBetween,
-                                                                   ConsumedEnergy,
-                                                                   MeteringSignature,
-                                                                   HubOperatorId,
-                                                                   HubProviderId,
-                                                                   QueryTimeout);
+                                                                                  SessionId,
+                                                                                  PartnerProductId,
+                                                                                  SessionStart,
+                                                                                  SessionEnd,
+                                                                                  AuthInfo,
+                                                                                  PartnerSessionId,
+                                                                                  ChargingStart,
+                                                                                  ChargingEnd,
+                                                                                  MeterValueStart,
+                                                                                  MeterValueEnd,
+                                                                                  MeterValuesInBetween,
+                                                                                  ConsumedEnergy,
+                                                                                  MeteringSignature,
+                                                                                  HubOperatorId,
+                                                                                  HubProviderId,
+                                                                                  QueryTimeout);
 
                     _Task.Wait();
 
@@ -755,6 +773,48 @@ namespace org.GraphDefined.WWCP.LocalService
         }
 
         #endregion
+
+
+
+
+        #region SendReserveEVSE(...)
+
+        public async Task<ReservationResult> SendReserveEVSE(CancellationToken       CancellationToken,
+                                                             DateTime                Timestamp,
+                                                             ChargingReservation_Id  ReservationId,
+                                                             DateTime?               StartTime,
+                                                             TimeSpan?               Duration,
+                                                             EVSP_Id                 ProviderId,
+                                                             ChargingPool_Id         ChargingPoolId,
+                                                             ChargingStation_Id      ChargingStationId,
+                                                             EVSE_Id                 EVSEId,
+                                                             ChargingProduct_Id      ChargingProductId)
+        {
+
+            if (_ChargingReservations.ContainsKey(ReservationId))
+                return new ReservationResult(ReservationResultType.ReservationId_AlreadyInUse);
+
+            var MaxDuration = TimeSpan.FromMinutes(15);
+
+            var Reservation = _ChargingReservations.
+                                  AddAndReturnValue(ReservationId,
+                                                    new ChargingReservation(Timestamp,
+                                                                            ReservationId,
+                                                                            ProviderId,
+                                                                            StartTime.HasValue                           ? StartTime.Value : DateTime.Now,
+                                                                            Duration. HasValue && Duration < MaxDuration ? Duration. Value : MaxDuration,
+                                                                            ChargingPoolId,
+                                                                            ChargingStationId,
+                                                                            EVSEId,
+                                                                            ChargingProductId));
+
+            return new ReservationResult(ReservationResultType.Success,
+                                         Reservation);
+
+        }
+
+        #endregion
+
 
     }
 

@@ -140,31 +140,31 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region AuthToken
+        #region Identification
 
-        private readonly Auth_Token _AuthToken;
+        private readonly AuthInfo _Identification;
 
         [Optional]
-        public Auth_Token AuthToken
+        public AuthInfo Identification
         {
             get
             {
-                return _AuthToken;
+                return _Identification;
             }
         }
 
         #endregion
 
-        #region eMAId
+        #region ChargingReservation
 
-        private readonly eMA_Id _eMAId;
+        private readonly ChargingReservation _ChargingReservation;
 
-        [Optional]
-        public eMA_Id eMAId
+        [Mandatory]
+        public ChargingReservation ChargingReservation
         {
             get
             {
-                return _eMAId;
+                return _ChargingReservation;
             }
         }
 
@@ -269,13 +269,10 @@ namespace org.GraphDefined.WWCP
         /// </summary>
         /// <param name="SessionId">The charging session identification from the Authorize Start request.</param>
         /// <param name="PartnerProductId">An unqiue identification for the consumed charging product.</param>
-
         /// <param name="EVSEId">An EVSE identification.</param>
-        
         /// <param name="SessionStart">The timestamp of the session start.</param>
         /// <param name="SessionEnd">The timestamp of the session end.</param>
-        /// <param name="AuthToken">An optional (RFID) user identification.</param>
-        /// <param name="eMAId">An optional e-Mobility account identification.</param>
+        /// <param name="AuthInfo">An identification.</param>
         /// <param name="PartnerSessionId">An optional partner session identification.</param>
         /// <param name="ChargingTime">Optional timestamps of the charging start/stop.</param>
         /// <param name="MeterValueStart">An optional initial value of the energy meter.</param>
@@ -291,8 +288,7 @@ namespace org.GraphDefined.WWCP
                                   ChargingPool_Id                   ChargingPoolId     = null,
                                   ChargingStation_Id                ChargingStationId  = null,
                                   EVSE_Id                           EVSEId             = null,
-                                  Auth_Token                        AuthToken          = null,
-                                  eMA_Id                            eMAId              = null,
+                                  AuthInfo                          AuthInfo           = null,
                                   StartEndTime?                     ParkingTime        = null,
                                   StartEndTime?                     SessionTime        = null,
                                   StartEndTime?                     ChargingTime       = null,
