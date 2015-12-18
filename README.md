@@ -6,8 +6,9 @@ Internet protocols. This repository defines the fundamental core concepts, entit
 and data structures.
 
 WWCP comes with adapters to well-known e-mobility protocols like OCPP, OICP and OCPI.
-Please note, that OICP is not a free and open protocol and therefore the adapter can
-not be distributed as free open source software.
+Please note, that the Intercharge protocol is not a free and open protocol and therefore
+the adapter can not be distributed as free open source software. Nevertheless it is
+available as shared source for customers of Hubject GmbH.
 
 This software is developed by [GraphDefined GmbH](http://www.graphdefined.com).
 We appreciate your participation in this ongoing project, and your help to improve it.
