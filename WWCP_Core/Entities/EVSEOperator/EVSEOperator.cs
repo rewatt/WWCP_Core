@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (c) 2014-2015 GraphDefined GmbH
- * This file is part of WWCP Core <https://github.com/WorldWideCharging/WWCP_Core>
+ * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1299,7 +1299,6 @@ namespace org.GraphDefined.WWCP
                 {
 
                     RoamingNetwork.
-                        RequestRouter.
                         SendChargingPoolAdminStatusDiff(new ChargingPoolAdminStatusDiff(DateTime.Now,
                                                                EVSEOperatorId:    Id,
                                                                EVSEOperatorName:  Name,
@@ -1408,7 +1407,6 @@ namespace org.GraphDefined.WWCP
                 {
 
                     RoamingNetwork.
-                        RequestRouter.
                         SendChargingStationAdminStatusDiff(new ChargingStationAdminStatusDiff(DateTime.Now,
                                                                EVSEOperatorId:    Id,
                                                                EVSEOperatorName:  Name,
@@ -1519,7 +1517,6 @@ namespace org.GraphDefined.WWCP
                 {
 
                     RoamingNetwork.
-                        RequestRouter.
                         SendEVSEStatusDiff(new EVSEStatusDiff(Timestamp:         DateTime.Now,
                                                               EVSEOperatorId:    Id,
                                                               EVSEOperatorName:  Name,
@@ -2077,7 +2074,7 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region ToString()
+        #region (override) ToString()
 
         /// <summary>
         /// Get a string representation of this object.

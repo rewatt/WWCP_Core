@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (c) 2014-2015 GraphDefined GmbH
- * This file is part of WWCP Core <https://github.com/WorldWideCharging/WWCP_Core>
+ * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1226,10 +1226,10 @@ namespace org.GraphDefined.WWCP
             this._AuthenticationModes        = new ReactiveSet<AuthenticationModes>();
 
             this._StatusSchedule             = new Stack<Timestamped<ChargingPoolStatusType>>((Int32) PoolStatusHistorySize);
-            this._StatusSchedule.Push(new Timestamped<ChargingPoolStatusType>(ChargingPoolStatusType.Unknown));
+            this._StatusSchedule.Push(new Timestamped<ChargingPoolStatusType>(ChargingPoolStatusType.Unspecified));
 
             this._AdminStatusSchedule        = new Stack<Timestamped<ChargingPoolAdminStatusType>>((Int32) PoolAdminStatusHistorySize);
-            this._AdminStatusSchedule.Push(new Timestamped<ChargingPoolAdminStatusType>(ChargingPoolAdminStatusType.Unknown));
+            this._AdminStatusSchedule.Push(new Timestamped<ChargingPoolAdminStatusType>(ChargingPoolAdminStatusType.Unspecified));
 
             #endregion
 
@@ -1753,17 +1753,34 @@ namespace org.GraphDefined.WWCP
             if (OnAggregatedChargingStationStatusChangedLocal != null)
                 OnAggregatedChargingStationStatusChangedLocal(Timestamp, ChargingStation, OldStatus, NewStatus);
 
+            InvokeStatusAggregationDelegate(Timestamp);
 
-            // Calculate new aggregated charging pool status and send upstream
+        }
+
+        #endregion
+
+        #region (internal) InvokeStatusAggregationDelegate(Timestamp)
+
+        /// <summary>
+        /// Calculate the current aggregates charging pool status and send it upstream.
+        /// </summary>
+        internal void InvokeStatusAggregationDelegate(DateTime Timestamp)
+        {
+
             if (StatusAggregationDelegate != null)
             {
 
-                var NewAggregatedStatus = new Timestamped<ChargingPoolStatusType>(StatusAggregationDelegate(new ChargingStationStatusReport(_ChargingStations.Values)));
+                var NewAggregatedStatus = new Timestamped<ChargingPoolStatusType>(Timestamp,
+                                                                                  StatusAggregationDelegate(new ChargingStationStatusReport(_ChargingStations.Values)));
 
                 if (NewAggregatedStatus.Value != _StatusSchedule.Peek().Value)
                 {
 
                     var OldAggregatedStatus = _StatusSchedule.Peek();
+
+                    // If we have the same timestampt remove the previous entry!
+                    if (OldAggregatedStatus.Timestamp == Timestamp)
+                        _StatusSchedule.Pop();
 
                     _StatusSchedule.Push(NewAggregatedStatus);
 
@@ -1811,6 +1828,10 @@ namespace org.GraphDefined.WWCP
 
                     var OldAggregatedStatus = _AdminStatusSchedule.Peek();
 
+                    // If we have the same timestampt remove the previous entry!
+                    if (OldAggregatedStatus.Timestamp == Timestamp)
+                        _StatusSchedule.Pop();
+
                     _AdminStatusSchedule.Push(NewAggregatedStatus);
 
                     var OnAggregatedAdminStatusChangedLocal = OnAggregatedAdminStatusChanged;
@@ -1839,6 +1860,7 @@ namespace org.GraphDefined.WWCP
         }
 
         #endregion
+
 
         #region IComparable<ChargingPool> Members
 
@@ -1944,7 +1966,7 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region ToString()
+        #region (override) ToString()
 
         /// <summary>
         /// Get a string representation of this object.

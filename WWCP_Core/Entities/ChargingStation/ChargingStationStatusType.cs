@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (c) 2014-2015 GraphDefined GmbH
- * This file is part of WWCP Core <https://github.com/WorldWideCharging/WWCP_Core>
+ * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,65 +19,71 @@ namespace org.GraphDefined.WWCP
 {
 
     /// <summary>
-    /// The status of a charging station.
+    /// The current status of a charging station.
     /// </summary>
     public enum ChargingStationStatusType
     {
 
         /// <summary>
-        /// Unknown/Unspecified
+        /// Unclear or unknown status of the charging station.
         /// </summary>
-        Unknown             = 0,
+        Unspecified         = 0,
 
         /// <summary>
-        /// This charging station is just planned for the future.
+        /// The charging station is planned for the future.
         /// </summary>
         Planned             = 1,
 
         /// <summary>
-        /// The charging station is currently in deployment.
+        /// The charging station is currently in deployment, but not fully operational yet.
         /// </summary>
         InDeployment        = 2,
 
         /// <summary>
-        /// The charging station is ready to charge.
+        /// The charging station is not ready for charging because it is under maintenance.
         /// </summary>
-        Available           = 3,
+        OutOfService        = 3,
 
         /// <summary>
-        /// Some cars are connected to the charging station, but still ready to charge.
+        /// Currently no communication with the charging station possible, but charging in offline mode might be available.
         /// </summary>
-        PartialAvailable    = 4,
+        Offline             = 4,
 
         /// <summary>
-        /// The charging station is occupied, no additional cars can be charged.
+        /// The entire charging station is ready to charge.
         /// </summary>
-        Occupied            = 5,
+        Available           = 5,
 
         /// <summary>
-        /// At least one car is connected and an error has occured during the charging process.
+        /// Some ongoing charging sessions or reservations, but still ready to charge.
         /// </summary>
-        Faulted             = 6,
+        PartialAvailable    = 6,
 
         /// <summary>
-        /// No cars are connected, but the station is out of service.
+        /// The entire charging station was reserved by an ev customer.
         /// </summary>
-        OutOfService        = 7,
+        Reserved            = 7,
 
         /// <summary>
-        /// The management platform has lost connection with the charging station (may be used by customer depending on its ability to handle offline mode).
+        /// The entire charging station is charging. Currently no additional charging sessions are possible.
         /// </summary>
-        Offline             = 8,
+        Charging            = 8,
 
         /// <summary>
-        /// No cars are connected but no car can connect except the ones that are booked for this charging station.
+        /// An error has occured in the charging station.
         /// </summary>
-        Reserved            = 9,
+        Faulted             = 9,
 
         /// <summary>
-        /// The charging station (identification) was not found!
+        /// Private or internal use.
         /// </summary>
-        StationNotFound     = 10
+        Other               = 10,
+
+        /// <summary>
+        /// The charging station was not found!
+        /// (Only valid within batch-processing)
+        /// </summary>
+        UnknownStation      = 11
 
     }
 

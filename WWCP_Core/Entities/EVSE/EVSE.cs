@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (c) 2014-2015 GraphDefined GmbH
- * This file is part of WWCP Core <https://github.com/WorldWideCharging/WWCP_Core>
+ * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ using System.Collections.Concurrent;
 using org.GraphDefined.Vanaheimr.Illias;
 using org.GraphDefined.Vanaheimr.Illias.Votes;
 using org.GraphDefined.Vanaheimr.Styx.Arrows;
+using System.Threading.Tasks;
+using System.Threading;
 
 #endregion
 
@@ -54,6 +56,11 @@ namespace org.GraphDefined.WWCP
         /// The default max size of the EVSE admin status history.
         /// </summary>
         public const UInt16 DefaultEVSEAdminStatusHistorySize = 50;
+
+        /// <summary>
+        /// The maximum time span for a reservation.
+        /// </summary>
+        public static readonly TimeSpan MaxReservationDuration = TimeSpan.FromMinutes(15);
 
         #endregion
 
@@ -335,6 +342,91 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+        #region ReservationId
+
+        /// <summary>
+        /// The charging reservation identification.
+        /// </summary>
+        [InternalUseOnly]
+        public ChargingReservation_Id ReservationId
+        {
+            get
+            {
+                return _Reservation.Id;
+            }
+        }
+
+        #endregion
+
+        #region Reservation
+
+        private ChargingReservation _Reservation;
+
+        /// <summary>
+        /// The charging reservation.
+        /// </summary>
+        [InternalUseOnly]
+        public ChargingReservation Reservation
+        {
+
+            get
+            {
+                return _Reservation;
+            }
+
+            set
+            {
+
+                if (_Reservation == value)
+                    return;
+
+                _Reservation = value;
+
+                if (_Reservation != null)
+                    SetStatus(EVSEStatusType.Reserved);
+                else
+                    SetStatus(EVSEStatusType.Available);
+
+            }
+
+        }
+
+        #endregion
+
+        #region CurrentChargingSession
+
+        private ChargingSession_Id _CurrentChargingSession;
+
+        /// <summary>
+        /// The current charging session at this EVSE.
+        /// </summary>
+        [InternalUseOnly]
+        public ChargingSession_Id CurrentChargingSession
+        {
+
+            get
+            {
+                return _CurrentChargingSession;
+            }
+
+            set
+            {
+
+                if (_CurrentChargingSession != value)
+                    SetProperty(ref _CurrentChargingSession, value);
+
+                if (_CurrentChargingSession != null)
+                    SetStatus(EVSEStatusType.Charging);
+                else
+                    SetStatus(EVSEStatusType.Available);
+
+            }
+
+        }
+
+        #endregion
+
+
         #region Status
 
         /// <summary>
@@ -510,6 +602,23 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region OnNewReservation
+
+        /// <summary>
+        /// A delegate called whenever a reservation was created.
+        /// </summary>
+        /// <param name="Timestamp">The timestamp when this change was detected.</param>
+        /// <param name="EVSE">The EVSE.</param>
+        /// <param name="Reservation">The new charging reservation.</param>
+        public delegate void OnNewReservationDelegate(DateTime Timestamp, EVSE EVSE, ChargingReservation Reservation);
+
+        /// <summary>
+        /// An event fired whenever reservation was created.
+        /// </summary>
+        public event OnNewReservationDelegate OnNewReservation;
+
+        #endregion
+
         #region SocketOutletAddition
 
         internal readonly IVotingNotificator<DateTime, EVSE, SocketOutlet, Boolean> SocketOutletAddition;
@@ -581,7 +690,7 @@ namespace org.GraphDefined.WWCP
             this._SocketOutlets         = new ReactiveSet<SocketOutlet>();
 
             this._StatusSchedule        = new Stack<Timestamped<EVSEStatusType>>((Int32) EVSEStatusHistorySize);
-            this._StatusSchedule.Push(new Timestamped<EVSEStatusType>(EVSEStatusType.Unknown));
+            this._StatusSchedule.Push(new Timestamped<EVSEStatusType>(EVSEStatusType.Unspecified));
 
             this._AdminStatusSchedule   = new Stack<Timestamped<EVSEAdminStatusType>>((Int32) EVSEStatusHistorySize);
 
@@ -611,6 +720,38 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+        #region SetStatus(NewStatus)
+
+        /// <summary>
+        /// Set the current status of this EVSE.
+        /// </summary>
+        /// <param name="NewStatus">A new status for this EVSE.</param>
+        public void SetStatus(EVSEStatusType  NewStatus)
+        {
+
+            if (_StatusSchedule.Peek().Value != NewStatus)
+            {
+
+                var Now = DateTime.Now;
+
+                var OldStatus = _StatusSchedule.Peek();
+
+                // If we have the same timestampt remove the previous entry!
+                if (OldStatus.Timestamp == Now)
+                    _StatusSchedule.Pop();
+
+                _StatusSchedule.Push(new Timestamped<EVSEStatusType>(Now, NewStatus));
+
+                var OnStatusChangedLocal = OnStatusChanged;
+                if (OnStatusChangedLocal != null)
+                    OnStatusChanged(Now, this, OldStatus, NewStatus);
+
+            }
+
+        }
+
+        #endregion
+
         #region SetStatus(Timestamp, NewStatus)
 
         /// <summary>
@@ -626,6 +767,10 @@ namespace org.GraphDefined.WWCP
             {
 
                 var OldStatus = _StatusSchedule.Peek();
+
+                // If we have the same timestampt remove the previous entry!
+                if (OldStatus.Timestamp == Timestamp)
+                    _StatusSchedule.Pop();
 
                 _StatusSchedule.Push(NewStatus);
 
@@ -661,6 +806,10 @@ namespace org.GraphDefined.WWCP
                     {
 
                         var OldStatus = _StatusSchedule.Peek();
+
+                        // If we have the same timestampt remove the previous entry!
+                        if (OldStatus.Timestamp == Timestamp)
+                            _StatusSchedule.Pop();
 
                         _StatusSchedule.Push(NewStatus);
 
@@ -710,6 +859,10 @@ namespace org.GraphDefined.WWCP
 
                 var OldStatus = _AdminStatusSchedule.Peek();
 
+                // If we have the same timestampt remove the previous entry!
+                if (OldStatus.Timestamp == Timestamp)
+                    _StatusSchedule.Pop();
+
                 _AdminStatusSchedule.Push(NewStatus);
 
                 var OnAdminStatusChangedLocal = OnAdminStatusChanged;
@@ -745,6 +898,10 @@ namespace org.GraphDefined.WWCP
 
                         var OldStatus = _AdminStatusSchedule.Peek();
 
+                        // If we have the same timestampt remove the previous entry!
+                        if (OldStatus.Timestamp == Timestamp)
+                            _StatusSchedule.Pop();
+
                         _AdminStatusSchedule.Push(NewStatus);
 
                         var OnAdminStatusChangedLocal = OnAdminStatusChanged;
@@ -777,6 +934,72 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+
+        public async Task<ReservationResult> Reserve(DateTime                Timestamp,
+                                                     CancellationToken       CancellationToken,
+                                                     EVSP_Id                 ProviderId,
+                                                     ChargingReservation_Id  ReservationId,
+                                                     DateTime?               StartTime,
+                                                     TimeSpan?               Duration,
+                                                     ChargingProduct_Id      ChargingProductId  = null,
+                                                     IEnumerable<Auth_Token> RFIDIds            = null,
+                                                     IEnumerable<eMA_Id>     eMAIds             = null,
+                                                     IEnumerable<UInt32>     PINs               = null)
+        {
+
+            #region Try to remove an existing reservation if this is an update!
+
+            if (ReservationId != null && _Reservation.Id != ReservationId)
+            {
+
+                return ReservationResult.UnknownChargingReservationId;
+
+                // Send DeleteReservation event!
+
+            }
+
+            #endregion
+
+            switch (Status.Value)
+            {
+
+                case EVSEStatusType.OutOfService:
+                    return ReservationResult.OutOfService;
+
+                case EVSEStatusType.Charging:
+                    return ReservationResult.AlreadyInUse;
+
+                case EVSEStatusType.Reserved:
+                    return ReservationResult.AlreadyReserved;
+
+                case EVSEStatusType.Available:
+
+                    this._Reservation = new ChargingReservation(Timestamp,
+                                                                StartTime.HasValue ? StartTime.Value : DateTime.Now,
+                                                                Duration. HasValue ? Duration. Value : MaxReservationDuration,
+                                                                ProviderId,
+                                                                ChargingReservationType.AtEVSE,
+                                                                ChargingStation.ChargingPool.EVSEOperator.RoamingNetwork,
+                                                                ChargingStation.ChargingPool.Id,
+                                                                ChargingStation.Id,
+                                                                Id,
+                                                                ChargingProductId,
+                                                                RFIDIds,
+                                                                eMAIds,
+                                                                PINs);
+
+                    SetStatus(EVSEStatusType.Reserved);
+
+                    return ReservationResult.Success(_Reservation);
+
+                default:
+                    return ReservationResult.Error();
+
+            }
+
+        }
+
+
         #region IEnumerable<SocketOutlet> Members
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
@@ -790,6 +1013,7 @@ namespace org.GraphDefined.WWCP
         }
 
         #endregion
+
 
         #region IComparable<EVSE> Members
 
@@ -828,7 +1052,7 @@ namespace org.GraphDefined.WWCP
             if ((Object) EVSE == null)
                 throw new ArgumentNullException("The given EVSE must not be null!");
 
-            return Id.CompareTo(EVSE.Id);
+            return _Id.CompareTo(EVSE._Id);
 
         }
 
@@ -875,7 +1099,7 @@ namespace org.GraphDefined.WWCP
             if ((Object) EVSE == null)
                 return false;
 
-            return Id.Equals(EVSE.Id);
+            return _Id.Equals(EVSE._Id);
 
         }
 
@@ -890,19 +1114,19 @@ namespace org.GraphDefined.WWCP
         /// </summary>
         public override Int32 GetHashCode()
         {
-            return Id.GetHashCode();
+            return _Id.GetHashCode();
         }
 
         #endregion
 
-        #region ToString()
+        #region (override) ToString()
 
         /// <summary>
         /// Get a string representation of this object.
         /// </summary>
         public override String ToString()
         {
-            return Id.ToString();
+            return _Id.ToString();
         }
 
         #endregion

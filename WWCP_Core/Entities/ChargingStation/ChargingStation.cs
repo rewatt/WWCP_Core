@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (c) 2014-2015 GraphDefined GmbH
- * This file is part of WWCP Core <https://github.com/WorldWideCharging/WWCP_Core>
+ * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ using org.GraphDefined.Vanaheimr.Illias;
 using org.GraphDefined.Vanaheimr.Illias.Votes;
 using org.GraphDefined.Vanaheimr.Styx.Arrows;
 using org.GraphDefined.Vanaheimr.Aegir;
+using System.Threading.Tasks;
+using System.Threading;
 
 #endregion
 
@@ -53,6 +55,11 @@ namespace org.GraphDefined.WWCP
         /// The default max size of the charging station (aggregated EVSE) admin status history.
         /// </summary>
         public const UInt16 DefaultStationAdminStatusHistorySize = 50;
+
+        /// <summary>
+        /// The maximum time span for a reservation.
+        /// </summary>
+        public static readonly TimeSpan MaxReservationDuration = TimeSpan.FromMinutes(15);
 
         #endregion
 
@@ -844,6 +851,58 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+        #region ReservationId
+
+        /// <summary>
+        /// The charging reservation identification.
+        /// </summary>
+        [InternalUseOnly]
+        public ChargingReservation_Id ReservationId
+        {
+            get
+            {
+                return _Reservation.Id;
+            }
+        }
+
+        #endregion
+
+        #region Reservation
+
+        private ChargingReservation _Reservation;
+
+        /// <summary>
+        /// The charging reservation.
+        /// </summary>
+        [InternalUseOnly]
+        public ChargingReservation Reservation
+        {
+
+            get
+            {
+                return _Reservation;
+            }
+
+            set
+            {
+
+                if (_Reservation == value)
+                    return;
+
+                _Reservation = value;
+
+                //if (_Reservation != null)
+                //    SetStatus(EVSEStatusType.Reserved);
+                //else
+                //    SetStatus(EVSEStatusType.Available);
+
+            }
+
+        }
+
+        #endregion
+
+
         #region Status
 
         /// <summary>
@@ -1266,7 +1325,7 @@ namespace org.GraphDefined.WWCP
             this._PaymentOptions          = new ReactiveSet<PaymentOptions>();
 
             this._StatusSchedule          = new Stack<Timestamped<ChargingStationStatusType>>((Int32) StationStatusHistorySize);
-            this._StatusSchedule.Push(new Timestamped<ChargingStationStatusType>(ChargingStationStatusType.Unknown));
+            this._StatusSchedule.Push(new Timestamped<ChargingStationStatusType>(ChargingStationStatusType.Unspecified));
 
             this._AdminStatusSchedule     = new Stack<Timestamped<ChargingStationAdminStatusType>>((Int32) StationAdminStatusHistorySize);
             this._AdminStatusSchedule.Push(new Timestamped<ChargingStationAdminStatusType>(ChargingStationAdminStatusType.Operational));
@@ -1339,11 +1398,12 @@ namespace org.GraphDefined.WWCP
 
             #endregion
 
+            var Now   = DateTime.Now;
             var _EVSE = new EVSE(EVSEId, this);
 
             Configurator.FailSafeInvoke(_EVSE);
 
-            if (EVSEAddition.SendVoting(DateTime.Now, this, _EVSE))
+            if (EVSEAddition.SendVoting(Now, this, _EVSE))
             {
                 if (_EVSEs.TryAdd(EVSEId, _EVSE))
                 {
@@ -1358,7 +1418,9 @@ namespace org.GraphDefined.WWCP
                                                     => UpdateEVSEAdminStatus(Timestamp, EVSE, OldEVSEStatus, NewEVSEStatus);
 
                     OnSuccess.FailSafeInvoke(_EVSE);
-                    EVSEAddition.SendNotification(DateTime.Now, this, _EVSE);
+                    EVSEAddition.SendNotification(Now, this, _EVSE);
+                    UpdateEVSEStatus(Now, _EVSE, new Timestamped<EVSEStatusType>(Now, EVSEStatusType.Unspecified), _EVSE.Status);
+
                     return _EVSE;
 
                 }
@@ -1449,27 +1511,31 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
-        #region SetAdminStatus(Timestamp, NewStatus)
+        #region SetAdminStatus(NewAdminStatus)
 
         /// <summary>
         /// Set the timestamped admin status of the charging station.
         /// </summary>
-        /// <param name="Timestamp">The timestamp when this change was detected.</param>
-        /// <param name="NewStatus">A list of new timestamped status for this charging station.</param>
-        public void SetAdminStatus(DateTime                                     Timestamp,
-                                   Timestamped<ChargingStationAdminStatusType>  NewStatus)
+        /// <param name="NewAdminStatus">A new admin status for this charging station.</param>
+        public void SetAdminStatus(ChargingStationAdminStatusType  NewAdminStatus)
         {
 
-            if (_AdminStatusSchedule.Peek().Value != NewStatus.Value)
+            if (_AdminStatusSchedule.Peek().Value != NewAdminStatus)
             {
+
+                var Now = DateTime.Now;
 
                 var OldStatus = _AdminStatusSchedule.Peek();
 
-                _AdminStatusSchedule.Push(NewStatus);
+                // If we have the same timestampt remove the previous entry!
+                if (OldStatus.Timestamp == Now)
+                    _StatusSchedule.Pop();
+
+                _AdminStatusSchedule.Push(new Timestamped<ChargingStationAdminStatusType>(Now, NewAdminStatus));
 
                 var OnAdminStatusChangedLocal = OnAdminStatusChanged;
                 if (OnAdminStatusChangedLocal != null)
-                    OnAdminStatusChanged(Timestamp, this, OldStatus, NewStatus);
+                    OnAdminStatusChanged(Now, this, OldStatus, NewAdminStatus);
 
             }
 
@@ -1477,20 +1543,52 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region SetAdminStatus(Timestamp, NewStatusList, ChangeMethod = ChangeMethods.Replace)
+        #region SetAdminStatus(Timestamp, NewAdminStatus)
 
         /// <summary>
         /// Set the timestamped admin status of the charging station.
         /// </summary>
         /// <param name="Timestamp">The timestamp when this change was detected.</param>
-        /// <param name="NewStatusList">A list of new timestamped status for this charging station.</param>
+        /// <param name="NewAdminStatus">A list of new timestamped admin status for this charging station.</param>
+        public void SetAdminStatus(DateTime                                     Timestamp,
+                                   Timestamped<ChargingStationAdminStatusType>  NewAdminStatus)
+        {
+
+            if (_AdminStatusSchedule.Peek().Value != NewAdminStatus.Value)
+            {
+
+                var OldStatus = _AdminStatusSchedule.Peek();
+
+                // If we have the same timestampt remove the previous entry!
+                if (OldStatus.Timestamp == Timestamp)
+                    _StatusSchedule.Pop();
+
+                _AdminStatusSchedule.Push(NewAdminStatus);
+
+                var OnAdminStatusChangedLocal = OnAdminStatusChanged;
+                if (OnAdminStatusChangedLocal != null)
+                    OnAdminStatusChanged(Timestamp, this, OldStatus, NewAdminStatus);
+
+            }
+
+        }
+
+        #endregion
+
+        #region SetAdminStatus(Timestamp, NewAdminStatusList, ChangeMethod = ChangeMethods.Replace)
+
+        /// <summary>
+        /// Set the timestamped admin status of the charging station.
+        /// </summary>
+        /// <param name="Timestamp">The timestamp when this change was detected.</param>
+        /// <param name="NewAdminStatusList">A list of new timestamped admin status for this charging station.</param>
         /// <param name="ChangeMethod">The change mode.</param>
         public void SetAdminStatus(DateTime                                                  Timestamp,
-                                   IEnumerable<Timestamped<ChargingStationAdminStatusType>>  NewStatusList,
+                                   IEnumerable<Timestamped<ChargingStationAdminStatusType>>  NewAdminStatusList,
                                    ChangeMethods                                             ChangeMethod = ChangeMethods.Replace)
         {
 
-            foreach (var NewStatus in NewStatusList)
+            foreach (var NewStatus in NewAdminStatusList)
             {
 
                 if (NewStatus.Timestamp <= DateTime.Now)
@@ -1499,6 +1597,10 @@ namespace org.GraphDefined.WWCP
                     {
 
                         var OldStatus = _AdminStatusSchedule.Peek();
+
+                        // If we have the same timestampt remove the previous entry!
+                        if (OldStatus.Timestamp == Timestamp)
+                            _StatusSchedule.Pop();
 
                         _AdminStatusSchedule.Push(NewStatus);
 
@@ -1513,13 +1615,13 @@ namespace org.GraphDefined.WWCP
                 {
 
                     if (ChangeMethod == ChangeMethods.Replace)
-                        _PlannedAdminStatusChanges = NewStatusList.
+                        _PlannedAdminStatusChanges = NewAdminStatusList.
                                                          Where(TVP => TVP.Timestamp > DateTime.Now).
                                                          ToList();
 
                     else
                         _PlannedAdminStatusChanges = _PlannedAdminStatusChanges.
-                                                         Concat(NewStatusList.Where(TVP => TVP.Timestamp > DateTime.Now)).
+                                                         Concat(NewAdminStatusList.Where(TVP => TVP.Timestamp > DateTime.Now)).
                                                          Deduplicate().
                                                          ToList();
 
@@ -1530,6 +1632,71 @@ namespace org.GraphDefined.WWCP
         }
 
         #endregion
+
+
+        public async Task<ReservationResult> Reserve(DateTime                Timestamp,
+                                                     CancellationToken       CancellationToken,
+                                                     EVSP_Id                 ProviderId,
+                                                     ChargingReservation_Id  ReservationId,
+                                                     DateTime?               StartTime,
+                                                     TimeSpan?               Duration,
+                                                     ChargingProduct_Id      ChargingProductId  = null,
+                                                     IEnumerable<Auth_Token> RFIDIds            = null,
+                                                     IEnumerable<eMA_Id>     eMAIds             = null,
+                                                     IEnumerable<UInt32>     PINs               = null)
+        {
+
+            #region Try to remove an existing reservation if this is an update!
+
+            if (ReservationId != null && _Reservation.Id != ReservationId)
+            {
+
+                return ReservationResult.UnknownChargingReservationId;
+
+                // Send DeleteReservation event!
+
+            }
+
+            #endregion
+
+            switch (Status.Value)
+            {
+
+                case ChargingStationStatusType.OutOfService:
+                    return ReservationResult.OutOfService;
+
+                case ChargingStationStatusType.Charging:
+                    return ReservationResult.AlreadyInUse;
+
+                case ChargingStationStatusType.Reserved:
+                    return ReservationResult.AlreadyReserved;
+
+                case ChargingStationStatusType.Available:
+
+                    this._Reservation = new ChargingReservation(Timestamp,
+                                                                StartTime.HasValue ? StartTime.Value : DateTime.Now,
+                                                                Duration. HasValue ? Duration. Value : MaxReservationDuration,
+                                                                ProviderId,
+                                                                ChargingReservationType.AtChargingStation,
+                                                                ChargingPool.EVSEOperator.RoamingNetwork,
+                                                                ChargingPool.Id,
+                                                                Id,
+                                                                null,
+                                                                ChargingProductId,
+                                                                RFIDIds,
+                                                                eMAIds,
+                                                                PINs);
+
+        //            SetStatus(EVSEStatusType.Reserved);
+
+                    return ReservationResult.Success(_Reservation);
+
+                default:
+                    return ReservationResult.Error();
+
+            }
+
+        }
 
 
         #region (internal) UpdateEVSEData(Timestamp, EVSE, OldStatus, NewStatus)
@@ -1577,17 +1744,35 @@ namespace org.GraphDefined.WWCP
             if (OnEVSEStatusChangedLocal != null)
                 OnEVSEStatusChangedLocal(Timestamp, EVSE, OldStatus, NewStatus);
 
+            InvokeStatusAggregationDelegate(Timestamp);
+
+        }
+
+        #endregion
+
+        #region (internal) InvokeStatusAggregationDelegate(Timestamp)
+
+        /// <summary>
+        /// Calculate the current aggregates charging station status and send it upstream.
+        /// </summary>
+        internal void InvokeStatusAggregationDelegate(DateTime Timestamp)
+        {
 
             // Calculate new aggregated charging station status and send upstream
             if (StatusAggregationDelegate != null)
             {
 
-                var NewAggregatedStatus = new Timestamped<ChargingStationStatusType>(StatusAggregationDelegate(new EVSEStatusReport(_EVSEs.Values)));
+                var NewAggregatedStatus = new Timestamped<ChargingStationStatusType>(Timestamp,
+                                                                                     StatusAggregationDelegate(new EVSEStatusReport(_EVSEs.Values)));
 
                 if (NewAggregatedStatus.Value != _StatusSchedule.Peek().Value)
                 {
 
                     var OldAggregatedStatus = _StatusSchedule.Peek();
+
+                    // If we have the same timestampt remove the previous entry!
+                    if (OldAggregatedStatus.Timestamp == Timestamp)
+                        _StatusSchedule.Pop();
 
                     _StatusSchedule.Push(NewAggregatedStatus);
 
@@ -1635,6 +1820,10 @@ namespace org.GraphDefined.WWCP
 
                     var OldAggregatedStatus = _AdminStatusSchedule.Peek();
 
+                    // If we have the same timestampt remove the previous entry!
+                    if (OldAggregatedStatus.Timestamp == Timestamp)
+                        _StatusSchedule.Pop();
+
                     _AdminStatusSchedule.Push(NewAggregatedStatus);
 
                     var OnAggregatedAdminStatusChangedLocal = OnAggregatedAdminStatusChanged;
@@ -1663,6 +1852,7 @@ namespace org.GraphDefined.WWCP
         }
 
         #endregion
+
 
         #region IComparable<ChargingStation> Members
 
@@ -1768,7 +1958,7 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region ToString()
+        #region (override) ToString()
 
         /// <summary>
         /// Get a string representation of this object.

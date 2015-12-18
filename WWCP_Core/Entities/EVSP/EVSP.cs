@@ -1,6 +1,6 @@
 ﻿/*
  * Copyright (c) 2014-2015 GraphDefined GmbH
- * This file is part of WWCP Core <https://github.com/WorldWideCharging/WWCP_Core>
+ * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ using System;
 
 using org.GraphDefined.Vanaheimr.Illias;
 
-using org.GraphDefined.WWCP.LocalService;
+using org.GraphDefined.WWCP;
 
 #endregion
 
@@ -119,14 +119,34 @@ namespace org.GraphDefined.WWCP
 
         #region EMobilityService
 
-        private readonly IAuthServices _EMobilityService;
+        private IAuthServices _EMobilityService;
 
         public IAuthServices EMobilityService
         {
+
             get
             {
                 return _EMobilityService;
             }
+
+            internal set
+            {
+
+                if (_EMobilityService == null)
+                {
+
+                    if (value == null)
+                        throw new ArgumentNullException("EMobilityService", "The given e-mobility service must not be null!");
+
+                    _EMobilityService = value;
+
+                }
+
+                else
+                    throw new ArgumentException("Setting property 'EMobilityService' twice is not allowed!");
+
+            }
+
         }
 
         #endregion
@@ -135,35 +155,14 @@ namespace org.GraphDefined.WWCP
 
         #region Constructor(s)
 
-        #region (internal) EVSProvider(Id, RoamingNetwork)
-
-        /// <summary>
-        /// Create a new Electric Vehicle Service Provider (EVSP)
-        /// having the given EVSProvider_Id.
-        /// </summary>
-        /// <param name="Id">The ChargingPool Id.</param>
-        /// <param name="RoamingNetwork">The corresponding roaming network.</param>
-        internal EVSP(EVSP_Id         Id,
-                                   RoamingNetwork  RoamingNetwork)
-
-            : this(Id, RoamingNetwork, new LocalEMobilityService(Id, Authorizator_Id.Parse(Id.ToString() + " Local Authorizator")))
-
-        { }
-
-        #endregion
-
-        #region (internal) EVSProvider(Id, RoamingNetwork, EMobilityService)
-
         /// <summary>
         /// Create a new Electric Vehicle Service Provider (EVSP)
         /// having the given EVSProvider_Id.
         /// </summary>
         /// <param name="Id">The ChargingPool Id.</param>
         /// <param name="RoamingNetwork">The associated roaming network.</param>
-        /// <param name="EMobilityService">The attached local or remote e-mobility service.</param>
-        internal EVSP(EVSP_Id                                        Id,
-                                   RoamingNetwork                                 RoamingNetwork,
-                                   IAuthServices  EMobilityService)
+        internal EVSP(EVSP_Id         Id,
+                      RoamingNetwork  RoamingNetwork)
 
             : base(Id)
 
@@ -174,20 +173,14 @@ namespace org.GraphDefined.WWCP
             if (RoamingNetwork == null)
                 throw new ArgumentNullException("RoamingNetwork", "The given roaming network must not be null!");
 
-            if (EMobilityService == null)
-                throw new ArgumentNullException("EMobilityService", "The given e-mobility service must not be null!");
-
             #endregion
+
+            this._RoamingNetwork        = RoamingNetwork;
 
             this.Name                   = new I18NString();
             this.Description            = new I18NString();
 
-            this._RoamingNetwork        = RoamingNetwork;
-            this._EMobilityService      = EMobilityService;
-
         }
-
-        #endregion
 
         #endregion
 
@@ -296,7 +289,7 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region ToString()
+        #region (override) ToString()
 
         /// <summary>
         /// Get a string representation of this object.
