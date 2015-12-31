@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2014-2015 GraphDefined GmbH
+ * Copyright (c) 2014-2016 GraphDefined GmbH <achim.friedland@graphdefined.com>
  * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
@@ -18,6 +18,7 @@
 #region Usings
 
 using System;
+using System.Collections.Generic;
 
 #endregion
 
@@ -46,15 +47,35 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region Token
+        #region ListOfAuthStopTokens
 
-        private readonly Auth_Token _Token;
+        private readonly IEnumerable<Auth_Token> _ListOfAuthStopTokens;
 
-        public Auth_Token Token
+        /// <summary>
+        /// An optional list of authorize stop tokens.
+        /// </summary>
+        public IEnumerable<Auth_Token> ListOfAuthStopTokens
         {
             get
             {
-                return _Token;
+                return _ListOfAuthStopTokens;
+            }
+        }
+
+        #endregion
+
+        #region ListOfAuthStopPINs
+
+        private readonly IEnumerable<UInt32> _ListOfAuthStopPINs;
+
+        /// <summary>
+        /// An optional list of authorize stop PINs.
+        /// </summary>
+        public IEnumerable<UInt32> ListOfAuthStopPINs
+        {
+            get
+            {
+                return _ListOfAuthStopPINs;
             }
         }
 
@@ -68,8 +89,8 @@ namespace org.GraphDefined.WWCP
 
         public SessionInfo(Auth_Token Token)
         {
-            this._Created   = DateTime.Now;
-            this._Token     = Token;
+            this._Created               = DateTime.Now;
+            this._ListOfAuthStopTokens  = new List<Auth_Token>() { Token };
         }
 
         #endregion

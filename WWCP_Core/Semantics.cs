@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2014-2015 GraphDefined GmbH
+ * Copyright (c) 2014-2016 GraphDefined GmbH <achim.friedland@graphdefined.com>
  * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
@@ -18,11 +18,8 @@
 #region Usings
 
 using System;
-using System.Runtime.CompilerServices;
 
 #endregion
-
-[assembly: InternalsVisibleTo("WWCP_Cloud")]
 
 namespace org.GraphDefined.WWCP
 {

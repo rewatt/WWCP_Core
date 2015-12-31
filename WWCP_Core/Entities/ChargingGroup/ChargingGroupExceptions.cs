@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (c) 2014-2015 GraphDefined GmbH
+ * Copyright (c) 2014-2016 GraphDefined GmbH <achim.friedland@graphdefined.com>
  * This file is part of WWCP Core <https://github.com/GraphDefined/WWCP_Core>
  *
  * Licensed under the Affero GPL license, Version 3.0 (the "License");
@@ -52,7 +52,7 @@ namespace org.GraphDefined.WWCP
     {
 
         public ChargingStationAlreadyExistsInGroup(ChargingStation_Id  ChargingStation_Id,
-                                                   ChargingGroup_Id    ChargingGroup_Id)
+                                                   ChargingStationGroup_Id    ChargingGroup_Id)
             : base("The given charging station identification '" + ChargingStation_Id + "' already exists within the given '" + ChargingGroup_Id + "' charging group!")
         { }
 
