@@ -207,6 +207,35 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region Brand
+
+        private Brand _Brand;
+
+        /// <summary>
+        /// A brand for this charging station
+        /// is this is different from the EVSE operator.
+        /// </summary>
+        [Optional]
+        public Brand Brand
+        {
+
+            get
+            {
+                return _Brand;
+            }
+
+            set
+            {
+
+                if (_Brand != value)
+                    SetProperty<Brand>(ref _Brand, value);
+
+            }
+
+        }
+
+        #endregion
+
         #region Address
 
         internal Address _Address;
@@ -469,39 +498,39 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region OpeningTime
+        #region OpeningTimes
 
-        internal OpeningTime _OpeningTime;
+        internal OpeningTimes _OpeningTimes;
 
         /// <summary>
-        /// The opening time of this charging station.
+        /// The opening times of this charging station.
         /// </summary>
-        public OpeningTime OpeningTime
+        public OpeningTimes OpeningTimes
         {
 
             get
             {
 
-                return _OpeningTime != null
-                    ? _OpeningTime
-                    : ChargingPool.OpeningTime;
+                return _OpeningTimes != null
+                    ? _OpeningTimes
+                    : ChargingPool.OpeningTimes;
 
             }
 
             set
             {
 
-                if (value == ChargingPool.OpeningTime)
+                if (value == ChargingPool.OpeningTimes)
                     return;
 
-                if (OpeningTime != value)
+                if (OpeningTimes != value)
                 {
 
                     if (value == null)
-                        DeleteProperty(ref _OpeningTime);
+                        DeleteProperty(ref _OpeningTimes);
 
                     else
-                        SetProperty(ref _OpeningTime, value);
+                        SetProperty(ref _OpeningTimes, value);
 
                 }
 
