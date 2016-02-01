@@ -19,14 +19,9 @@
 
 using System;
 using System.Linq;
-using System.Diagnostics;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 
 using org.GraphDefined.Vanaheimr.Illias;
-using org.GraphDefined.Vanaheimr.Illias.Votes;
-using org.GraphDefined.Vanaheimr.Styx.Arrows;
-using org.GraphDefined.Vanaheimr.Aegir;
 
 #endregion
 
@@ -43,185 +38,465 @@ namespace org.GraphDefined.WWCP
                                    IEquatable<ChargingSession>, IComparable<ChargingSession>, IComparable
     {
 
-        #region Data
-
-        /// <summary>
-        /// The default max size of the charging session (aggregated charging station) status list.
-        /// </summary>
-        public const UInt16 DefaultMaxPoolStatusListSize = 15;
-
-        /// <summary>
-        /// The default max size of the charging session admin status list.
-        /// </summary>
-        public const UInt16 DefaultMaxPoolAdminStatusListSize = 15;
-
-        /// <summary>
-        /// The maximum time span for a reservation.
-        /// </summary>
-        public static readonly TimeSpan MaxReservationDuration = TimeSpan.FromMinutes(30);
-
-        #endregion
-
         #region Properties
-
-        #region Name
-
-        private I18NString _Name;
-
-        /// <summary>
-        /// The offical (multi-language) name of this charging session.
-        /// </summary>
-        [Mandatory]
-        public I18NString Name
-        {
-
-            get
-            {
-                return _Name;
-            }
-
-            set
-            {
-
-                if (value == null)
-                    value = new I18NString();
-
-                if (_Name != value)
-                    SetProperty<I18NString>(ref _Name, value);
-
-            }
-
-        }
-
-        #endregion
-
-        #region Description
-
-        private I18NString _Description;
-
-        /// <summary>
-        /// An optional (multi-language) description of this charging session.
-        /// </summary>
-        [Optional]
-        public I18NString Description
-        {
-
-            get
-            {
-                return _Description;
-            }
-
-            set
-            {
-
-                if (value == null)
-                    value = new I18NString();
-
-                if (_Description != value)
-                    SetProperty<I18NString>(ref _Description, value);
-
-            }
-
-        }
-
-        #endregion
-
 
         #region EVSEOperator
 
         private EVSEOperator _EVSEOperator;
 
-        /// <summary>
-        /// The EVSE operator of this charging session.
-        /// </summary>
-        [Optional]
         public EVSEOperator EVSEOperator
         {
+
             get
             {
                 return _EVSEOperator;
             }
+
+            set
+            {
+
+                _EVSEOperator = value;
+
+                if (value != null)
+                    _EVSEOperatorId  = value.Id;
+
+            }
+
         }
 
         #endregion
 
-        #region ChargingStations
+        #region EVSEOperatorId
 
-        private readonly ConcurrentDictionary<ChargingStation_Id, ChargingStation> _ChargingStations;
+        private EVSEOperator_Id _EVSEOperatorId;
+
+        public EVSEOperator_Id EVSEOperatorId
+        {
+
+            get
+            {
+                return _EVSEOperatorId;
+            }
+
+            set
+            {
+                _EVSEOperatorId = value;
+            }
+
+        }
+
+        #endregion
+
+        #region ChargingPool
+
+        private ChargingPool _ChargingPool;
+
+        public ChargingPool ChargingPool
+        {
+
+            get
+            {
+                return _ChargingPool;
+            }
+
+            set
+            {
+
+                _ChargingPool = value;
+
+                if (value != null)
+                {
+                    _ChargingPoolId     = value.Id;
+                    _EVSEOperator       = value.Operator;
+                    _EVSEOperatorId     = value.Operator.Id;
+                }
+
+            }
+
+        }
+
+        #endregion
+
+        #region ChargingPoolId
+
+        private ChargingPool_Id _ChargingPoolId;
+
+        public ChargingPool_Id ChargingPoolId
+        {
+
+            get
+            {
+
+                if (_EVSE != null)
+                    return _EVSE.ChargingStation.ChargingPool.Id;
+
+                return _ChargingPoolId;
+
+            }
+
+            set
+            {
+
+                _ChargingPoolId = value;
+
+                if (_EVSE != null && _EVSE.ChargingStation.ChargingPool.Id != value)
+                    _EVSE = null;
+
+            }
+
+        }
+
+        #endregion
+
+        #region ChargingStation
+
+        private ChargingStation _ChargingStation;
+
+        public ChargingStation ChargingStation
+        {
+
+            get
+            {
+                return _ChargingStation;
+            }
+
+            set
+            {
+
+                _ChargingStation = value;
+
+                if (value != null)
+                {
+                    _ChargingStationId  = value.Id;
+                    _ChargingPool       = value.ChargingPool;
+                    _ChargingPoolId     = value.ChargingPool.Id;
+                    _EVSEOperator       = value.Operator;
+                    _EVSEOperatorId     = value.Operator.Id;
+                }
+
+            }
+
+        }
+
+        #endregion
+
+        #region ChargingStationId
+
+        private ChargingStation_Id _ChargingStationId;
+
+        public ChargingStation_Id ChargingStationId
+        {
+
+            get
+            {
+                return _ChargingStationId;
+            }
+
+            set
+            {
+
+                _ChargingStationId = value;
+
+                if (_ChargingStation != null && _ChargingStation.Id != value)
+                    _ChargingStation = null;
+
+            }
+
+        }
+
+        #endregion
+
+        #region EVSE
+
+        private EVSE _EVSE;
 
         /// <summary>
-        /// Return all charging stations registered within this charing pool.
+        /// The Electric Vehicle Supply Equipments (EVSE) for this charging session.
         /// </summary>
-        public IEnumerable<ChargingStation> ChargingStations
+        [Optional]
+        public EVSE EVSE
+        {
+
+            get
+            {
+                return _EVSE;
+            }
+
+            set
+            {
+
+                _EVSE  = value;
+
+                if (value != null)
+                {
+                    _EVSEId             = value.Id;
+                    _ChargingStation    = value.ChargingStation;
+                    _ChargingStationId  = value.ChargingStation.Id;
+                    _ChargingPool       = value.ChargingStation.ChargingPool;
+                    _ChargingPoolId     = value.ChargingStation.ChargingPool.Id;
+                    _EVSEOperator       = value.Operator;
+                    _EVSEOperatorId     = value.Operator.Id;
+                }
+
+            }
+
+        }
+
+        #endregion
+
+        #region EVSEId
+
+        private EVSE_Id _EVSEId;
+
+        public EVSE_Id EVSEId
+        {
+
+            get
+            {
+                return _EVSEId;
+            }
+
+            set
+            {
+
+                _EVSEId = value;
+
+                if (_EVSE != null && _EVSE.Id != value)
+                    _EVSE = null;
+
+            }
+
+        }
+
+        #endregion
+
+
+        #region Reservation
+
+        private ChargingReservation _Reservation;
+
+        /// <summary>
+        /// An optional charging reservation for this charging session.
+        /// </summary>
+        [Optional]
+        public ChargingReservation Reservation
+        {
+
+            get
+            {
+                return _Reservation;
+            }
+
+            set
+            {
+
+                _Reservation = value;
+
+                if (value != null)
+                    _ReservationId = value.Id;
+
+            }
+
+        }
+
+        #endregion
+
+        #region ReservationId
+
+        private ChargingReservation_Id _ReservationId;
+
+        /// <summary>
+        /// An optional charging reservation for this charging session.
+        /// </summary>
+        [Optional]
+        public ChargingReservation_Id ReservationId
+        {
+
+            get
+            {
+                return _ReservationId;
+            }
+
+            set
+            {
+
+                _ReservationId = value;
+
+                if (_Reservation != null && _Reservation.Id != value)
+                    _Reservation = null;
+
+            }
+
+        }
+
+        #endregion
+
+        #region ProviderId
+
+        /// <summary>
+        /// The e-Mobility service provider identification for this charging session.
+        /// </summary>
+        [Optional]
+        public EVSP_Id ProviderId { get; set; }
+
+        #endregion
+
+        #region AuthToken
+
+        public Auth_Token AuthToken { get; set; }
+
+        #endregion
+
+        #region eMAId
+
+        /// <summary>
+        /// The unique identification of an Electric Mobility Account (driver contract) (eMAId).
+        /// </summary>
+        [Optional]
+        public eMA_Id eMAId { get; set; }
+
+        #endregion
+
+
+        #region ChargingProductId
+
+        /// <summary>
+        /// The charging product selected for this charging session.
+        /// </summary>
+        [Optional]
+        public ChargingProduct_Id ChargingProductId { get; set; }
+
+        #endregion
+
+
+        #region ParkingTime
+
+        /// <summary>
+        /// Optional timestamps when the parking started and ended.
+        /// </summary>
+        [Optional]
+        public StartEndDateTime? ParkingTime { get; set; }
+
+        #endregion
+
+        #region SessionTime
+
+        /// <summary>
+        /// Optional timestamps when the charging session started and ended.
+        /// </summary>
+        [Mandatory]
+        public StartEndDateTime? SessionTime { get; set; }
+
+        #endregion
+
+        #region ChargingTime
+
+        /// <summary>
+        /// Optional timestamps when the charging started and ended.
+        /// </summary>
+        [Optional]
+        public StartEndDateTime? ChargingTime { get; set; }
+
+        #endregion
+
+
+        #region EnergyMeterId
+
+        /// <summary>
+        /// An optional unique identification of the energy meter.
+        /// </summary>
+        [Optional]
+        public EnergyMeter_Id EnergyMeterId { get; set; }
+
+        #endregion
+
+        #region EnergyMeterValues
+
+        private List<Timestamped<Double>> _EnergyMeterValues;
+
+        /// <summary>
+        /// An optional enumeration of intermediate energy meter values.
+        /// This values indicate the consumed energy between the current
+        /// and the last timestamp in watt-hours [Wh].
+        /// </summary>
+        [Optional]
+        public List<Timestamped<Double>> EnergyMeterValues
         {
             get
             {
-                return _ChargingStations.Select(KVP => KVP.Value);
+                return _EnergyMeterValues;
             }
         }
 
         #endregion
 
-        #region ChargingStationIds
+        #region ConsumedEnergy
 
         /// <summary>
-        /// Return all charging station Ids registered within this charing pool.
+        /// The current amount of energy consumed while charging in [kWh].
         /// </summary>
-        public IEnumerable<ChargingStation_Id> ChargingStationIds
-        {
-            get
-            {
-                return _ChargingStations.Select(KVP => KVP.Value.Id);
-            }
-        }
-
-        #endregion
-
-        #region EVSEs
-
-        /// <summary>
-        /// All Electric Vehicle Supply Equipments (EVSE) present
-        /// within this charging session.
-        /// </summary>
-        public IEnumerable<EVSE> EVSEs
+        [Mandatory]
+        public Double ConsumedEnergy
         {
             get
             {
 
-                return _ChargingStations.
-                           Values.
-                           SelectMany(station => station.EVSEs);
+                return EnergyMeterValues.
+                           Select(metervalue => metervalue.Value).
+                           Sum() / 1000;
 
             }
         }
 
         #endregion
 
-        #region EVSEIds
 
-        /// <summary>
-        /// The unique identifications of all Electric Vehicle Supply Equipment
-        /// (EVSEs) present within this charging session.
-        /// </summary>
-        public IEnumerable<EVSE_Id> EVSEIds
-        {
-            get
-            {
+        #region AuthService
 
-                return _ChargingStations.
-                           Values.
-                           SelectMany(station => station.EVSEs).
-                           Select    (evse    => evse.Id);
-
-            }
-        }
+        public IeMobilityServiceProvider AuthService { get; set; }
 
         #endregion
+
+        #region OperatorRoamingService
+
+        public IOperatorRoamingService OperatorRoamingService { get; set; }
+
+        #endregion
+
+
+        private Boolean _RemoveMe;
+
+        public Boolean RemoveMe
+        {
+
+            get
+            {
+                return _RemoveMe;
+            }
+
+            set
+            {
+                _RemoveMe = value;
+            }
+
+        }
 
         #endregion
 
         #region Events
 
+        /// <summary>
+        /// An event send whenever a new energy meter value was received.
+        /// </summary>
+        /// <param name="Timestamp">The current timestamp.</param>
+        /// <param name="ChargingSession">The unique charging session identification.</param>
+        /// <param name="EnergyMeterValue">A timestamped energy meter value.</param>
+        public delegate void OnNewEnergyMeterValueDelegate(DateTime Timestamp, ChargingSession ChargingSession, Timestamped<Double> EnergyMeterValue);
+
+        /// <summary>
+        /// An event send whenever a new energy meter value was received.
+        /// </summary>
+        public event OnNewEnergyMeterValueDelegate OnNewEnergyMeterValue;
 
         #endregion
 
@@ -231,9 +506,7 @@ namespace org.GraphDefined.WWCP
         /// Create a new group/pool of charging stations having the given identification.
         /// </summary>
         /// <param name="Id">The unique identification of the charing pool.</param>
-        /// <param name="EVSEOperator">The parent EVSE operator.</param>
-        internal ChargingSession(ChargingSession_Id  Id,
-                                 EVSEOperator        EVSEOperator)
+        public ChargingSession(ChargingSession_Id  Id)
 
             : base(Id)
 
@@ -241,29 +514,14 @@ namespace org.GraphDefined.WWCP
 
             #region Initial checks
 
-            if (EVSEOperator == null)
-                throw new ArgumentNullException("EVSEOperator", "The EVSE operator must not be null!");
+            if (Id   == null)
+                throw new ArgumentNullException("Id",    "The given charging session identification must not be null!");
 
             #endregion
 
-            #region Init data and properties
+            this._EnergyMeterValues  = new List<Timestamped<double>>();
 
-            this._EVSEOperator               = EVSEOperator;
-
-            this.Name                        = new I18NString();
-            this.Description                 = new I18NString();
-
-            #endregion
-
-            #region Init events
-
-
-            #endregion
-
-            #region Link events
-
-
-            #endregion
+            this.SessionTime         = new StartEndDateTime(DateTime.Now);
 
         }
 

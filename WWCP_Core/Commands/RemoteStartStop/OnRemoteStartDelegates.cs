@@ -21,7 +21,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using org.GraphDefined.WWCP;
+using org.GraphDefined.Vanaheimr.Illias;
 
 #endregion
 
@@ -32,39 +32,57 @@ namespace org.GraphDefined.WWCP
     /// Indicate a remote start of the given charging session at the given EVSE
     /// and for the given provider/eMAId.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
     /// <param name="EVSEId">The unique identification of an EVSE.</param>
     /// <param name="ReservationId">The unique identification for a charging reservation.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="ProviderId">The unique identification of the e-mobility service provider for the case it is different from the current message sender.</param>
     /// <param name="eMAId">The unique identification of the e-mobility account.</param>
-    /// <param name="ChargingProductId">The unique identification of the choosen charging product at the given EVSE.</param>
-    public delegate void OnRemoteEVSEStartDelegate(Object                  Sender,
-                                                   DateTime                Timestamp,
+    /// <param name="ChargingProductId">The unique identification of the choosen charging product.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
+    public delegate void OnRemoteEVSEStartDelegate(DateTime                Timestamp,
+                                                   Object                  Sender,
+                                                   EventTracking_Id        EventTrackingId,
                                                    RoamingNetwork_Id       RoamingNetworkId,
                                                    EVSE_Id                 EVSEId,
                                                    ChargingProduct_Id      ChargingProductId,
                                                    ChargingReservation_Id  ReservationId,
                                                    ChargingSession_Id      SessionId,
                                                    EVSP_Id                 ProviderId,
-                                                   eMA_Id                  eMAId);
+                                                   eMA_Id                  eMAId,
+                                                   TimeSpan?               QueryTimeout);
 
     /// <summary>
     /// Indicate a remote start of the given charging session at the given EVSE
     /// and for the given provider/eMAId.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
     /// <param name="EVSEId">The unique identification of an EVSE.</param>
+    /// <param name="ReservationId">The unique identification for a charging reservation.</param>
+    /// <param name="SessionId">The unique identification for this charging session.</param>
+    /// <param name="ProviderId">The unique identification of the e-mobility service provider for the case it is different from the current message sender.</param>
+    /// <param name="eMAId">The unique identification of the e-mobility account.</param>
+    /// <param name="ChargingProductId">The unique identification of the choosen charging product.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     /// <param name="Result">The remote start result.</param>
-    public delegate void OnRemoteEVSEStartedDelegate(Object                 Sender,
-                                                     DateTime               Timestamp,
-                                                     RoamingNetwork_Id      RoamingNetworkId,
-                                                     EVSE_Id                EVSEId,
-                                                     RemoteStartEVSEResult  Result);
+    public delegate void OnRemoteEVSEStartedDelegate(DateTime                Timestamp,
+                                                     Object                  Sender,
+                                                     EventTracking_Id        EventTrackingId,
+                                                     RoamingNetwork_Id       RoamingNetworkId,
+                                                     EVSE_Id                 EVSEId,
+                                                     ChargingProduct_Id      ChargingProductId,
+                                                     ChargingReservation_Id  ReservationId,
+                                                     ChargingSession_Id      SessionId,
+                                                     EVSP_Id                 ProviderId,
+                                                     eMA_Id                  eMAId,
+                                                     TimeSpan?               QueryTimeout,
+                                                     RemoteStartEVSEResult   Result);
 
 
 
@@ -73,24 +91,25 @@ namespace org.GraphDefined.WWCP
     /// and for the given provider/eMAId.
     /// </summary>
     /// <param name="Timestamp">The timestamp of the request.</param>
-    /// <param name="Sender">The sender of the request.</param>
-    /// <param name="CancellationToken">A token to cancel this task.</param>
+    /// <param name="CancellationToken">A token to cancel this request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="EVSEId">The unique identification of an EVSE.</param>
     /// <param name="ReservationId">The unique identification for a charging reservation.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="ProviderId">The unique identification of the e-mobility service provider for the case it is different from the current message sender.</param>
     /// <param name="eMAId">The unique identification of the e-mobility account.</param>
-    /// <param name="ChargingProductId">The unique identification of the choosen charging product at the given EVSE.</param>
-    /// <returns>A RemoteStartResult task.</returns>
+    /// <param name="ChargingProductId">The unique identification of the choosen charging product.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     public delegate Task<RemoteStartEVSEResult> OnRemoteStartEVSEDelegate(DateTime                Timestamp,
-                                                                          Object                  Sender,
                                                                           CancellationToken       CancellationToken,
+                                                                          EventTracking_Id        EventTrackingId,
                                                                           EVSE_Id                 EVSEId,
                                                                           ChargingProduct_Id      ChargingProductId,
                                                                           ChargingReservation_Id  ReservationId,
                                                                           ChargingSession_Id      SessionId,
                                                                           EVSP_Id                 ProviderId,
-                                                                          eMA_Id                  eMAId);
+                                                                          eMA_Id                  eMAId,
+                                                                          TimeSpan?               QueryTimeout  = null);
 
 
     // ----------------------------------------------------------------------------------------------------------
@@ -100,38 +119,56 @@ namespace org.GraphDefined.WWCP
     /// Indicate a remote start of the given charging session at the given charging station
     /// and for the given provider/eMAId.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
     /// <param name="ChargingStationId">The unique identification of a charging station.</param>
-    /// <param name="ChargingProductId">The unique identification of the choosen charging product at the given EVSE.</param>
+    /// <param name="ChargingProductId">The unique identification of the choosen charging product.</param>
     /// <param name="ReservationId">The unique identification for a charging reservation.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="ProviderId">The unique identification of the e-mobility service provider for the case it is different from the current message sender.</param>
     /// <param name="eMAId">The unique identification of the e-mobility account.</param>
-    public delegate void OnRemoteChargingStationStartDelegate(Object                  Sender,
-                                                              DateTime                Timestamp,
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
+    public delegate void OnRemoteChargingStationStartDelegate(DateTime                Timestamp,
+                                                              Object                  Sender,
+                                                              EventTracking_Id        EventTrackingId,
                                                               RoamingNetwork_Id       RoamingNetworkId,
                                                               ChargingStation_Id      ChargingStationId,
                                                               ChargingProduct_Id      ChargingProductId,
                                                               ChargingReservation_Id  ReservationId,
                                                               ChargingSession_Id      SessionId,
                                                               EVSP_Id                 ProviderId,
-                                                              eMA_Id                  eMAId);
+                                                              eMA_Id                  eMAId,
+                                                              TimeSpan?               QueryTimeout);
 
     /// <summary>
     /// Indicate a remote start of the given charging session at the given charging station
     /// and for the given provider/eMAId.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
-    /// <param name="ChargingStationId">The unique identification of an charging station.</param>
+    /// <param name="ChargingStationId">The unique identification of a charging station.</param>
+    /// <param name="ChargingProductId">The unique identification of the choosen charging product.</param>
+    /// <param name="ReservationId">The unique identification for a charging reservation.</param>
+    /// <param name="SessionId">The unique identification for this charging session.</param>
+    /// <param name="ProviderId">The unique identification of the e-mobility service provider for the case it is different from the current message sender.</param>
+    /// <param name="eMAId">The unique identification of the e-mobility account.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     /// <param name="Result">The remote start result.</param>
-    public delegate void OnRemoteChargingStationStartedDelegate(Object                            Sender,
-                                                                DateTime                          Timestamp,
+    public delegate void OnRemoteChargingStationStartedDelegate(DateTime                          Timestamp,
+                                                                Object                            Sender,
+                                                                EventTracking_Id                  EventTrackingId,
                                                                 RoamingNetwork_Id                 RoamingNetworkId,
                                                                 ChargingStation_Id                ChargingStationId,
+                                                                ChargingProduct_Id                ChargingProductId,
+                                                                ChargingReservation_Id            ReservationId,
+                                                                ChargingSession_Id                SessionId,
+                                                                EVSP_Id                           ProviderId,
+                                                                eMA_Id                            eMAId,
+                                                                TimeSpan?                         QueryTimeout,
                                                                 RemoteStartChargingStationResult  Result);
 
 
@@ -140,24 +177,25 @@ namespace org.GraphDefined.WWCP
     /// and for the given provider/eMAId.
     /// </summary>
     /// <param name="Timestamp">The timestamp of the request.</param>
-    /// <param name="Sender">The sender of the request.</param>
-    /// <param name="CancellationToken">A token to cancel this task.</param>
+    /// <param name="CancellationToken">A token to cancel this request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="ChargingStationId">The unique identification of a charging station.</param>
-    /// <param name="ChargingProductId">The unique identification of the choosen charging product at the given EVSE.</param>
+    /// <param name="ChargingProductId">The unique identification of the choosen charging product.</param>
     /// <param name="ReservationId">The unique identification for a charging reservation.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="ProviderId">The unique identification of the e-mobility service provider for the case it is different from the current message sender.</param>
     /// <param name="eMAId">The unique identification of the e-mobility account.</param>
-    /// <returns>A RemoteStartResult task.</returns>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     public delegate Task<RemoteStartChargingStationResult> OnRemoteStartChargingStationDelegate(DateTime                Timestamp,
-                                                                                                Object                  Sender,
                                                                                                 CancellationToken       CancellationToken,
+                                                                                                EventTracking_Id        EventTrackingId,
                                                                                                 ChargingStation_Id      ChargingStationId,
                                                                                                 ChargingProduct_Id      ChargingProductId,
                                                                                                 ChargingReservation_Id  ReservationId,
                                                                                                 ChargingSession_Id      SessionId,
                                                                                                 EVSP_Id                 ProviderId,
-                                                                                                eMA_Id                  eMAId);
+                                                                                                eMA_Id                  eMAId,
+                                                                                                TimeSpan?               QueryTimeout  = null);
 
 }
 

@@ -36,15 +36,6 @@ namespace org.GraphDefined.WWCP
                                       IComparable
     {
 
-        #region Data
-
-        /// <summary>
-        /// The default max size of the charging station (aggregated EVSE) status history.
-        /// </summary>
-        public const UInt16 DefaultStationStatusHistorySize = 50;
-
-        #endregion
-
         #region Properties
 
         #region SessionId
@@ -52,7 +43,7 @@ namespace org.GraphDefined.WWCP
         private readonly ChargingSession_Id _SessionId;
 
         /// <summary>
-        /// The charging session identification from the Authorize Start request.
+        /// The unique charging session identification.
         /// </summary>
         [Mandatory]
         public ChargingSession_Id SessionId
@@ -65,61 +56,35 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region PartnerSessionId
+        #region ChargingReservation
 
-        private readonly ChargingSession_Id _PartnerSessionId;
+        private readonly ChargingReservation _ChargingReservation;
 
+        /// <summary>
+        /// An optional charging reservation used for charging.
+        /// </summary>
         [Optional]
-        public ChargingSession_Id PartnerSessionId
+        public ChargingReservation ChargingReservation
         {
             get
             {
-                return _PartnerSessionId;
+                return _ChargingReservation;
             }
         }
 
         #endregion
 
-        #region PartnerProductId
 
-        private readonly ChargingProduct_Id _PartnerProductId;
+        #region EVSE
+
+        private readonly EVSE _EVSE;
 
         [Optional]
-        public ChargingProduct_Id PartnerProductId
+        public EVSE EVSE
         {
             get
             {
-                return _PartnerProductId;
-            }
-        }
-
-        #endregion
-
-        #region ChargingPoolId
-
-        private readonly ChargingPool_Id _ChargingPoolId;
-
-        [Optional]
-        public ChargingPool_Id ChargingPoolId
-        {
-            get
-            {
-                return _ChargingPoolId;
-            }
-        }
-
-        #endregion
-
-        #region ChargingStationId
-
-        private readonly ChargingStation_Id _ChargingStationId;
-
-        [Optional]
-        public ChargingStation_Id ChargingStationId
-        {
-            get
-            {
-                return _ChargingStationId;
+                return _EVSE;
             }
         }
 
@@ -140,46 +105,97 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region Identification
+        #region ChargingStation
 
-        private readonly AuthInfo _Identification;
+        private readonly ChargingStation _ChargingStation;
 
         [Optional]
-        public AuthInfo Identification
+        public ChargingStation ChargingStation
         {
             get
             {
-                return _Identification;
+                return _ChargingStation;
+            }
+
+        }
+
+        #endregion
+
+        #region ChargingPool
+
+        private readonly ChargingPool _ChargingPool;
+
+        [Optional]
+        public ChargingPool ChargingPool
+        {
+            get
+            {
+                return _ChargingPool;
             }
         }
 
         #endregion
 
-        #region ChargingReservation
+        #region EVSEOperator
 
-        private readonly ChargingReservation _ChargingReservation;
+        private readonly EVSEOperator _EVSEOperator;
 
-        [Mandatory]
-        public ChargingReservation ChargingReservation
+        [Optional]
+        public EVSEOperator EVSEOperator
         {
             get
             {
-                return _ChargingReservation;
+                return _EVSEOperator;
             }
         }
 
         #endregion
 
-        #region ParkingTime
+        #region ChargingProductId
 
-        private readonly StartEndDateTime? _ParkingTime;
+        private readonly ChargingProduct_Id _ChargingProductId;
 
-        [Mandatory]
-        public StartEndDateTime? ParkingTime
+        /// <summary>
+        /// The charging product selected for this charge detail record.
+        /// </summary>
+        [Optional]
+        public ChargingProduct_Id ChargingProductId
         {
             get
             {
-                return _ParkingTime;
+                return _ChargingProductId;
+            }
+        }
+
+        #endregion
+
+
+        #region ProviderId
+
+        private readonly EVSP_Id _ProviderId;
+
+        [Optional]
+        public EVSP_Id ProviderId
+        {
+            get
+            {
+                return _ProviderId;
+            }
+        }
+
+        #endregion
+
+
+        #region ReservationTime
+
+        private readonly StartEndDateTime? _ReservationTime;
+
+        [Mandatory]
+        public StartEndDateTime? ReservationTime
+        {
+            get
+            {
+                return _ReservationTime;
             }
         }
 
@@ -200,46 +216,53 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region ChargingTime
+        #region ParkingTime
 
-        private readonly StartEndDateTime? _ChargingTime;
+        private readonly StartEndDateTime? _ParkingTime;
 
-        [Mandatory]
-        public StartEndDateTime? ChargingTime
+        [Optional]
+        public StartEndDateTime? ParkingTime
         {
             get
             {
-                return _ChargingTime;
+                return _ParkingTime;
             }
         }
 
         #endregion
 
-        #region ConsumedEnergy
 
-        private readonly Double? _ConsumedEnergy;
+        #region EnergyMeterId
 
+        private readonly EnergyMeter_Id _EnergyMeterId;
+
+        /// <summary>
+        /// An optional unique identification of the energy meter.
+        /// </summary>
         [Optional]
-        public Double? ConsumedEnergy
+        public EnergyMeter_Id EnergyMeterId
         {
             get
             {
-                return _ConsumedEnergy;
+                return _EnergyMeterId;
             }
         }
 
         #endregion
 
-        #region MeterValues
+        #region EnergyMeterValues
 
-        private readonly IEnumerable<Timestamped<Double>> _MeterValues;
+        private readonly IEnumerable<Timestamped<Double>> _EnergyMeterValues;
 
+        /// <summary>
+        /// An optional enumeration of intermediate energy meter values.
+        /// </summary>
         [Optional]
-        public IEnumerable<Timestamped<Double>> MeterValues
+        public IEnumerable<Timestamped<Double>> EnergyMeterValues
         {
             get
             {
-                return _MeterValues;
+                return _EnergyMeterValues;
             }
         }
 
@@ -249,12 +272,31 @@ namespace org.GraphDefined.WWCP
 
         private readonly String _MeteringSignature;
 
+        /// <summary>
+        /// An optional signature for the metering values.
+        /// </summary>
         [Optional]
         public String MeteringSignature
         {
             get
             {
                 return _MeteringSignature;
+            }
+        }
+
+        #endregion
+
+
+        #region Identification
+
+        private readonly AuthInfo _Identification;
+
+        [Optional]
+        public AuthInfo Identification
+        {
+            get
+            {
+                return _Identification;
             }
         }
 
@@ -267,34 +309,45 @@ namespace org.GraphDefined.WWCP
         /// <summary>
         /// Create a charge detail record for the given charging session (identification).
         /// </summary>
-        /// <param name="SessionId">The charging session identification from the Authorize Start request.</param>
-        /// <param name="PartnerProductId">An unqiue identification for the consumed charging product.</param>
-        /// <param name="EVSEId">An EVSE identification.</param>
-        /// <param name="SessionStart">The timestamp of the session start.</param>
-        /// <param name="SessionEnd">The timestamp of the session end.</param>
-        /// <param name="AuthInfo">An identification.</param>
-        /// <param name="PartnerSessionId">An optional partner session identification.</param>
-        /// <param name="ChargingTime">Optional timestamps of the charging start/stop.</param>
-        /// <param name="MeterValueStart">An optional initial value of the energy meter.</param>
-        /// <param name="MeterValueEnd">An optional final value of the energy meter.</param>
-        /// <param name="MeterValuesInBetween">An optional enumeration of meter values during the charging session.</param>
-        /// <param name="ConsumedEnergy">The optional amount of consumed energy.</param>
+        /// <param name="SessionId">The unique charging session identification.</param>
+        /// <param name="ChargingReservation">An optional charging reservation used for charging.</param>
+        /// 
+        /// <param name="EVSE">The EVSE of the EVSE used for charging.</param>
+        /// <param name="ChargingStation">The charging station of the charging station used for charging.</param>
+        /// <param name="ChargingPool">The charging pool of the charging pool used for charging.</param>
+        /// <param name="EVSEOperator">The EVSE operator used for charging.</param>
+        /// <param name="ChargingProductId">An unqiue identification for the consumed charging product.</param>
+        /// 
+        /// <param name="ReservationTime">Optional timestamps when the reservation started and ended.</param>
+        /// <param name="ParkingTime">Optional timestamps when the parking started and ended.</param>
+        /// <param name="SessionTime">Optional timestamps when the charging session started and ended.</param>
+        /// 
+        /// <param name="EnergyMeterId">An optional unique identification of the energy meter.</param>
+        /// <param name="EnergyMeterValues">An optional enumeration of intermediate energy meter values.</param>
         /// <param name="MeteringSignature">An optional signature for the metering values.</param>
-        /// <param name="HubOperatorId">An optional identification of the hub operator.</param>
-        /// <param name="HubProviderId">An optional identification of the hub provider.</param>
+        /// 
+        /// <param name="Identification">An identification.</param>
         public ChargeDetailRecord(ChargingSession_Id                SessionId,
-                                  ChargingSession_Id                PartnerSessionId   = null,
-                                  ChargingProduct_Id                PartnerProductId   = null,
-                                  ChargingPool_Id                   ChargingPoolId     = null,
-                                  ChargingStation_Id                ChargingStationId  = null,
-                                  EVSE_Id                           EVSEId             = null,
-                                  AuthInfo                          AuthInfo           = null,
-                                  StartEndDateTime?                     ParkingTime        = null,
-                                  StartEndDateTime?                     SessionTime        = null,
-                                  StartEndDateTime?                     ChargingTime       = null,
-                                  Double?                           ConsumedEnergy     = null,
-                                  IEnumerable<Timestamped<Double>>  MeterValues        = null,
-                                  String                            MeteringSignature  = null)
+                                  ChargingReservation               ChargingReservation  = null,
+
+                                  EVSEOperator                      EVSEOperator         = null,
+                                  ChargingPool                      ChargingPool         = null,
+                                  ChargingStation                   ChargingStation      = null,
+                                  EVSE                              EVSE                 = null,
+                                  EVSE_Id                           EVSEId               = null,
+                                  ChargingProduct_Id                ChargingProductId    = null,
+
+                                  EVSP_Id                           ProviderId           = null,
+
+                                  StartEndDateTime?                 ReservationTime      = null,
+                                  StartEndDateTime?                 ParkingTime          = null,
+                                  StartEndDateTime?                 SessionTime          = null,
+
+                                  EnergyMeter_Id                    EnergyMeterId        = null,
+                                  IEnumerable<Timestamped<Double>>  EnergyMeterValues    = null,
+                                  String                            MeteringSignature    = null,
+
+                                  AuthInfo                          Identification       = null)
 
         {
 
@@ -305,9 +358,24 @@ namespace org.GraphDefined.WWCP
 
             #endregion
 
-            this._SessionId         = SessionId;
-            this._PartnerSessionId  = PartnerSessionId;
-            this._PartnerProductId  = PartnerProductId;
+            this._SessionId            = SessionId;
+            this._ChargingReservation  = ChargingReservation;
+
+            this._EVSE                 = EVSE;
+            this._EVSEId               = EVSE != null ? EVSE.Id : EVSEId;
+            this._ChargingStation      = ChargingStation;
+            this._ChargingPool         = ChargingPool;
+            this._EVSEOperator         = EVSEOperator;
+            this._ChargingProductId    = ChargingProductId;
+
+            this._ReservationTime      = ReservationTime;
+            this._ParkingTime          = ParkingTime;
+            this._SessionTime          = SessionTime;
+
+            this._EnergyMeterId        = EnergyMeterId;
+            this._EnergyMeterValues    = EnergyMeterValues != null ? EnergyMeterValues : new Timestamped<Double>[0];
+
+            this._Identification       = Identification;
 
         }
 

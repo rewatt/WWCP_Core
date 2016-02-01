@@ -18,10 +18,10 @@
 #region Usings
 
 using System;
+
+using org.GraphDefined.Vanaheimr.Illias;
 using System.Threading;
 using System.Threading.Tasks;
-
-using org.GraphDefined.WWCP;
 
 #endregion
 
@@ -29,109 +29,167 @@ namespace org.GraphDefined.WWCP
 {
 
     /// <summary>
-    /// Indicate an authorize stop.
+    /// An event fired whenever an authentication token will be verified to stop a charging process.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
     /// <param name="OperatorId">An EVSE operator identification.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="AuthToken">A (RFID) user identification.</param>
-    public delegate void OnAuthorizeStopDelegate(Object              Sender,
-                                                 DateTime            Timestamp,
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
+    public delegate void OnAuthorizeStopDelegate(DateTime            Timestamp,
+                                                 Object              Sender,
+                                                 EventTracking_Id    EventTrackingId,
                                                  RoamingNetwork_Id   RoamingNetworkId,
                                                  EVSEOperator_Id     OperatorId,
                                                  ChargingSession_Id  SessionId,
-                                                 Auth_Token          AuthToken);
+                                                 Auth_Token          AuthToken,
+                                                 TimeSpan?           QueryTimeout);
 
     /// <summary>
-    /// Indicate an authorize stop.
+    /// An event fired whenever an authentication token had been verified to stop a charging process.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
+    /// <param name="OperatorId">An EVSE operator identification.</param>
+    /// <param name="SessionId">The unique identification for this charging session.</param>
+    /// <param name="AuthToken">A (RFID) user identification.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     /// <param name="Result">The authorize stop result.</param>
-    public delegate void OnAuthorizeStoppedDelegate(Object             Sender,
-                                                    DateTime           Timestamp,
-                                                    RoamingNetwork_Id  RoamingNetworkId,
-                                                    AuthStopResult     Result);
+    public delegate void OnAuthorizeStoppedDelegate(DateTime            Timestamp,
+                                                    Object              Sender,
+                                                    EventTracking_Id    EventTrackingId,
+                                                    RoamingNetwork_Id   RoamingNetworkId,
+                                                    EVSEOperator_Id     OperatorId,
+                                                    ChargingSession_Id  SessionId,
+                                                    Auth_Token          AuthToken,
+                                                    TimeSpan?           QueryTimeout,
+                                                    AuthStopResult      Result);
 
 
     // ----------------------------------------------------------------------------------------------------------
 
 
     /// <summary>
-    /// Indicate an authorize stop at the given EVSE.
+    /// An event fired whenever an authentication token will be verified to stop a charging process at the given EVSE.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
     /// <param name="OperatorId">An EVSE operator identification.</param>
     /// <param name="EVSEId">The unique identification of an EVSE.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="AuthToken">A (RFID) user identification.</param>
-    public delegate void OnAuthorizeEVSEStopDelegate(Object              Sender,
-                                                     DateTime            Timestamp,
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
+    public delegate void OnAuthorizeEVSEStopDelegate(DateTime            Timestamp,
+                                                     Object              Sender,
+                                                     EventTracking_Id    EventTrackingId,
                                                      RoamingNetwork_Id   RoamingNetworkId,
                                                      EVSEOperator_Id     OperatorId,
                                                      EVSE_Id             EVSEId,
                                                      ChargingSession_Id  SessionId,
-                                                     Auth_Token          AuthToken);
+                                                     Auth_Token          AuthToken,
+                                                     TimeSpan?           QueryTimeout);
 
     /// <summary>
-    /// Indicate an authorize stop at the given EVSE.
+    /// An event fired whenever an authentication token had been verified to stop a charging process at the given EVSE.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
+    /// <param name="OperatorId">An EVSE operator identification.</param>
     /// <param name="EVSEId">The unique identification of an EVSE.</param>
+    /// <param name="SessionId">The unique identification for this charging session.</param>
+    /// <param name="AuthToken">A (RFID) user identification.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     /// <param name="Result">The authorize stop result.</param>
-    public delegate void OnAuthorizeEVSEStoppedDelegate(Object              Sender,
-                                                        DateTime            Timestamp,
+    public delegate void OnAuthorizeEVSEStoppedDelegate(DateTime            Timestamp,
+                                                        Object              Sender,
+                                                        EventTracking_Id    EventTrackingId,
                                                         RoamingNetwork_Id   RoamingNetworkId,
+                                                        EVSEOperator_Id     OperatorId,
                                                         EVSE_Id             EVSEId,
+                                                        ChargingSession_Id  SessionId,
+                                                        Auth_Token          AuthToken,
+                                                        TimeSpan?           QueryTimeout,
                                                         AuthStopEVSEResult  Result);
 
+
+
+    /// <summary>
+    /// An event fired whenever an authentication token had been verified to stop a charging process at the given EVSE.
+    /// </summary>
+    /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="CancellationToken">A token to cancel this request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
+    /// <param name="OperatorId">An EVSE operator identification.</param>
+    /// <param name="EVSEId">The unique identification of an EVSE.</param>
+    /// <param name="SessionId">The unique identification for this charging session.</param>
+    /// <param name="AuthToken">A (RFID) user identification.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
+    public delegate Task<AuthStopEVSEResult> OnAuthorizeStopEVSEDelegate(DateTime            Timestamp,
+                                                                         CancellationToken   CancellationToken,
+                                                                         EventTracking_Id    EventTrackingId,
+                                                                         EVSEOperator_Id     OperatorId,
+                                                                         EVSE_Id             EVSEId,
+                                                                         ChargingSession_Id  SessionId,
+                                                                         Auth_Token          AuthToken,
+                                                                         TimeSpan?           QueryTimeout);
 
     // ----------------------------------------------------------------------------------------------------------
 
 
 
     /// <summary>
-    /// Indicate an authorize stop at the given charging station.
+    /// An event fired whenever an authentication token will be verified to stop a charging process at the given charging station.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
     /// <param name="OperatorId">An EVSE operator identification.</param>
     /// <param name="ChargingStationId">The unique identification of a charging station.</param>
     /// <param name="SessionId">The unique identification for this charging session.</param>
     /// <param name="AuthToken">A (RFID) user identification.</param>
-    public delegate void OnAuthorizeChargingStationStopDelegate(Object              Sender,
-                                                                DateTime            Timestamp,
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
+    public delegate void OnAuthorizeChargingStationStopDelegate(DateTime            Timestamp,
+                                                                Object              Sender,
+                                                                EventTracking_Id    EventTrackingId,
                                                                 RoamingNetwork_Id   RoamingNetworkId,
                                                                 EVSEOperator_Id     OperatorId,
                                                                 ChargingStation_Id  ChargingStationId,
                                                                 ChargingSession_Id  SessionId,
-                                                                Auth_Token          AuthToken);
+                                                                Auth_Token          AuthToken,
+                                                                TimeSpan?           QueryTimeout);
 
     /// <summary>
-    /// Indicate an authorize stop at the given charging station.
+    /// An event fired whenever an authentication token had been verified to stop a charging process at the given charging station.
     /// </summary>
-    /// <param name="Sender">The sender of the request.</param>
     /// <param name="Timestamp">The timestamp of the request.</param>
+    /// <param name="Sender">The sender of the request.</param>
+    /// <param name="EventTrackingId">An unique event tracking identification for correlating this request with other events.</param>
     /// <param name="RoamingNetworkId">The unique identification for the roaming network.</param>
+    /// <param name="OperatorId">An EVSE operator identification.</param>
     /// <param name="ChargingStationId">The unique identification of a charging station.</param>
+    /// <param name="SessionId">The unique identification for this charging session.</param>
+    /// <param name="AuthToken">A (RFID) user identification.</param>
+    /// <param name="QueryTimeout">An optional timeout for this request.</param>
     /// <param name="Result">The authorize stop result.</param>
-    public delegate void OnAuthorizeChargingStationStoppedDelegate(Object                         Sender,
-                                                                   DateTime                       Timestamp,
+    public delegate void OnAuthorizeChargingStationStoppedDelegate(DateTime                       Timestamp,
+                                                                   Object                         Sender,
+                                                                   EventTracking_Id               EventTrackingId,
                                                                    RoamingNetwork_Id              RoamingNetworkId,
+                                                                   EVSEOperator_Id                OperatorId,
                                                                    ChargingStation_Id             ChargingStationId,
+                                                                   ChargingSession_Id             SessionId,
+                                                                   Auth_Token                     AuthToken,
+                                                                   TimeSpan?                      QueryTimeout,
                                                                    AuthStopChargingStationResult  Result);
 
-
-
-
 }
-
-

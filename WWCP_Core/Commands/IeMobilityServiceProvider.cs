@@ -18,20 +18,27 @@
 #region Usings
 
 using System;
+using System.Linq;
+using System.Collections.Generic;
 
 #endregion
 
 namespace org.GraphDefined.WWCP
 {
 
-    public delegate void CSConnectedDelegate(IRemoteChargingStation ChargingStation);
+    /// <summary>
+    /// The EV Roaming Provider provided EVSE Operator services interface.
+    /// </summary>
+    public interface IeMobilityServiceProvider : IGeneralServices
+    {
 
-    public delegate void CSEVSEOperatorTimeoutReachedDelegate(IRemoteChargingStation ChargingStation, String EVSEOperatorDNS);
+        Authorizator_Id AuthorizatorId { get; }
 
-    public delegate void CSDisconnectedDelegate(IRemoteChargingStation ChargingStation);
+        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> AllTokens            { get; }
+        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> AuthorizedTokens     { get; }
+        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> NotAuthorizedTokens  { get; }
+        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> BlockedTokens        { get; }
 
-    public delegate void CSStateChangedDelegate(IRemoteChargingStation ChargingStation,
-                                            ChargingStationStatusType OldState,
-                                            ChargingStationStatusType NewState);
+    }
 
 }

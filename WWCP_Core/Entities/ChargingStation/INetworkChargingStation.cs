@@ -15,28 +15,14 @@
  * limitations under the License.
  */
 
-#region Usings
-
-using System.Collections.Generic;
-
-#endregion
-
 namespace org.GraphDefined.WWCP
 {
 
     /// <summary>
-    /// The EV Roaming Provider provided EVSE Operator services interface.
+    /// A remote charging station attached via a computer network (TCP/IP).
     /// </summary>
-    public interface IAuthServices : IEVSEOperatorServices
-    {
-
-        Authorizator_Id AuthorizatorId { get; }
-
-        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> AllTokens            { get; }
-        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> AuthorizedTokens     { get; }
-        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> NotAuthorizedTokens  { get; }
-        IEnumerable<KeyValuePair<Auth_Token, TokenAuthorizationResultType>> BlockedTokens        { get; }
-
-    }
+    public interface INetworkChargingStation : IRemoteChargingStation,
+                                               INetworkAttached
+    { }
 
 }

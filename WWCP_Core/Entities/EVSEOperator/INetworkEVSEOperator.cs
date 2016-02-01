@@ -19,26 +19,10 @@ namespace org.GraphDefined.WWCP
 {
 
     /// <summary>
-    /// The charging reservation type.
+    /// A remote EVSE operator attached via a computer network (TCP/IP).
     /// </summary>
-    public enum ChargingReservationType
-    {
-
-        /// <summary>
-        /// The EVSE was reserved.
-        /// </summary>
-        AtEVSE,
-
-        /// <summary>
-        /// The charging station was reserved.
-        /// </summary>
-        AtChargingStation,
-
-        /// <summary>
-        /// The charging pool was reserved.
-        /// </summary>
-        AtChargingPool
-
-    }
+    public interface INetworkEVSEOperator : IRemoteEVSEOperator,
+                                            INetworkAttached
+    { }
 
 }

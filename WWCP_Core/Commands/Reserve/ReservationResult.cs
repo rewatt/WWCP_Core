@@ -74,6 +74,18 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+        #region (static) UnknownEVSEOperator
+
+        public static ReservationResult UnknownEVSEOperator
+        {
+            get
+            {
+                return new ReservationResult(ReservationResultType.UnknownEVSE);
+            }
+        }
+
+        #endregion
+
         #region (static) UnknownChargingReservationId
 
         public static ReservationResult UnknownChargingReservationId
@@ -158,6 +170,18 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region (static) Offline
+
+        public static ReservationResult Offline
+        {
+            get
+            {
+                return new ReservationResult(ReservationResultType.Offline);
+            }
+        }
+
+        #endregion
+
         #region (static) NoEVSEsAvailable
 
         public static ReservationResult NoEVSEsAvailable
@@ -175,6 +199,18 @@ namespace org.GraphDefined.WWCP
         public static ReservationResult Success(ChargingReservation Reservation)
         {
             return new ReservationResult(Reservation);
+        }
+
+        #endregion
+
+        #region (static) Timeout
+
+        public static ReservationResult Timeout
+        {
+            get
+            {
+                return new ReservationResult(ReservationResultType.Timeout);
+            }
         }
 
         #endregion
@@ -205,7 +241,7 @@ namespace org.GraphDefined.WWCP
 
         #region ReservationResult(Reservation)
 
-        private ReservationResult(ChargingReservation  Reservation)
+        private ReservationResult(ChargingReservation Reservation)
         {
 
             this._Result       = ReservationResultType.Success;
@@ -237,6 +273,7 @@ namespace org.GraphDefined.WWCP
 
         Unspecified,
 
+        UnknownEVSEOperator,
         UnknownChargingReservationId,
         UnknownChargingPool,
         UnknownChargingStation,
@@ -245,6 +282,7 @@ namespace org.GraphDefined.WWCP
         AlreadyInUse,
         AlreadyReserved,
         OutOfService,
+        Offline,
 
         NoEVSEsAvailable,
 

@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using org.GraphDefined.Vanaheimr.Hermod.HTTP;
+using org.GraphDefined.Vanaheimr.Illias;
 
 #endregion
 
@@ -36,6 +37,57 @@ namespace org.GraphDefined.WWCP
     {
 
         Authorizator_Id AuthorizatorId { get; }
+
+        #region Properties
+
+        /// <summary>
+        /// The unique identification of the roaming provider.
+        /// </summary>
+        RoamingProvider_Id Id                { get; }
+
+        /// <summary>
+        /// The offical (multi-language) name of the roaming provider.
+        /// </summary>
+        I18NString         Name              { get; }
+
+        /// <summary>
+        /// The hosting WWCP roaming network.
+        /// </summary>
+        RoamingNetwork_Id  RoamingNetworkId  { get; }
+
+        #endregion
+
+        #region Events
+
+        // Client methods (logging)
+
+
+        // Server methods
+
+        #region OnAuthorizeStart/-Stop
+
+        /// <summary>
+        /// An event sent whenever a authorize start command was received.
+        /// </summary>
+        event OnAuthorizeStartEVSEDelegate  OnAuthorizeStartEVSE;
+
+        /// <summary>
+        /// An event sent whenever a authorize start command was received.
+        /// </summary>
+        event OnAuthorizeStopEVSEDelegate   OnAuthorizeStopEVSE;
+
+        #endregion
+
+        #region OnChargeDetailRecord
+
+        /// <summary>
+        /// An event sent whenever a charge detail record was received.
+        /// </summary>
+        event OnChargeDetailRecordDelegate OnChargeDetailRecord;
+
+        #endregion
+
+        #endregion
 
     }
 

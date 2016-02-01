@@ -18,17 +18,26 @@
 namespace org.GraphDefined.WWCP
 {
 
-    public enum AuthenticationModes
+    /// <summary>
+    /// The charging reservation type.
+    /// </summary>
+    public enum ChargingReservationLevel
     {
 
-        Unkown,
-        NFC_RFID_Classic,
-        NFC_RFID_DESFire,
-        PnC,                    // ISO/IEC 15118
-        REMOTE,                 // App, QR-Code, Phone
-        DirectPayment,          // Remote use via direct payment. E.g. intercharge direct
-        SMS,
-        Phone
+        /// <summary>
+        /// The EVSE was reserved.
+        /// </summary>
+        EVSE,
+
+        /// <summary>
+        /// The charging station was reserved.
+        /// </summary>
+        ChargingStation,
+
+        /// <summary>
+        /// The charging pool was reserved.
+        /// </summary>
+        ChargingPool
 
     }
 

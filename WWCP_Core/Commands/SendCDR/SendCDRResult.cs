@@ -103,25 +103,25 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+        #region (static) NotForwared(AuthorizatorId, Description = null)
+
+        public static SendCDRResult NotForwared(Authorizator_Id  AuthorizatorId,
+                                                String           Description = null)
+        {
+
+            return new SendCDRResult(SendCDRResultType.NotForwared,
+                                     AuthorizatorId,
+                                     Description);
+
+        }
+
+        #endregion
+
         #region (static) Forwarded(AuthorizatorId)
 
         public static SendCDRResult Forwarded(Authorizator_Id AuthorizatorId)
         {
             return new SendCDRResult(SendCDRResultType.Forwarded, AuthorizatorId);
-        }
-
-        #endregion
-
-        #region (static) False(AuthorizatorId, Description = null)
-
-        public static SendCDRResult False(Authorizator_Id  AuthorizatorId,
-                                          String           Description = null)
-        {
-
-            return new SendCDRResult(SendCDRResultType.False,
-                                     AuthorizatorId,
-                                     Description);
-
         }
 
         #endregion
@@ -140,13 +140,41 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region (static) NotForwared(AuthorizatorId, Description = null)
+        #region (static) UnknownEVSE(AuthorizatorId, Description = null)
 
-        public static SendCDRResult NotForwared(Authorizator_Id  AuthorizatorId,
+        public static SendCDRResult UnknownEVSE(Authorizator_Id  AuthorizatorId,
                                                 String           Description = null)
         {
 
-            return new SendCDRResult(SendCDRResultType.NotForwared,
+            return new SendCDRResult(SendCDRResultType.UnknownEVSE,
+                                     AuthorizatorId,
+                                     Description);
+
+        }
+
+        #endregion
+
+        #region (static) OutOfService(AuthorizatorId, Description = null)
+
+        public static SendCDRResult OutOfService(Authorizator_Id  AuthorizatorId,
+                                                 String           Description = null)
+        {
+
+            return new SendCDRResult(SendCDRResultType.OutOfService,
+                                     AuthorizatorId,
+                                     Description);
+
+        }
+
+        #endregion
+
+        #region (static) Error(AuthorizatorId, Description = null)
+
+        public static SendCDRResult Error(Authorizator_Id  AuthorizatorId,
+                                          String           Description = null)
+        {
+
+            return new SendCDRResult(SendCDRResultType.Error,
                                      AuthorizatorId,
                                      Description);
 
@@ -159,10 +187,19 @@ namespace org.GraphDefined.WWCP
 
     public enum SendCDRResultType
     {
+
+        NotForwared,
+
         Forwarded,
-        False,
+
         InvalidSessionId,
-        NotForwared
+
+        UnknownEVSE,
+
+        OutOfService,
+
+        Error
+
     }
 
 }
