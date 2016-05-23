@@ -5,7 +5,7 @@ connect market actors in the field of e-mobility solutions via scalable and secu
 Internet protocols. This repository defines the fundamental core concepts, entities
 and data structures.
 
-### Related Projects
+#### Related Projects
 
 Serveral project make use of this core library:
  - **WWCP Cloud** allows you to run distributed and fault-tolerant EMP or CPO backends.
@@ -16,12 +16,12 @@ Serveral project make use of this core library:
  - [WWCP OICP](https://github.com/OpenChargingCloud/WWCP_OICP) defines a mapping between WWCP and the [Open InterCharge Protocol](http://www.intercharge.eu). *Please note, that the intercharge protocol is not (yet) a free and open protocol and therefore this adapter is not available as free Open Source software. Nevertheless it is available as shared source for customers of [Hubject GmbH](http://www.hubject.com).*
 
 
-### Requirements & Configuration
+#### Requirements & Configuration
 
 1. You need .NET 4.6+
 
 
-### Your contributions...
+#### Your contributions
 
 This software is developed by [GraphDefined GmbH](http://www.graphdefined.com).
 We appreciate your participation in this ongoing project, and your help to improve it.
