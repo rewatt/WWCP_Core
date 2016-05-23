@@ -19,37 +19,56 @@ namespace org.GraphDefined.WWCP
 {
 
     /// <summary>
-    /// The admin status of an EVSE.
+    /// The current status of a parking spot.
     /// </summary>
-    public enum EVSEAdminStatusType
+    public enum ParkingSpotStatusType
     {
 
         /// <summary>
-        /// Unclear or unknown admin status of the EVSE.
+        /// Unclear or unknown status of the parking spot.
         /// </summary>
         Unspecified         = 0,
 
         /// <summary>
+        /// The parking spot is planned for the future.
+        /// </summary>
+        Planned             = 1,
+
+        /// <summary>
+        /// The parking spot is currently in deployment.
+        /// </summary>
+        InDeployment        = 2,
+
+        /// <summary>
+        /// The parking spot is currently blocked.
+        /// </summary>
+        Blocked             = 3,
+
+        /// <summary>
+        /// The parking spot is available.
+        /// </summary>
+        Available           = 4,
+
+        /// <summary>
+        /// The parking spot was reserved.
+        /// </summary>
+        Reserved            = 5,
+
+        /// <summary>
+        /// The parking spot is currently in use.
+        /// </summary>
+        InUse               = 6,
+
+        /// <summary>
         /// Private or internal use.
         /// </summary>
-        InternalUse         = 1,
+        Other               = 7,
 
         /// <summary>
-        /// The EVSE is not ready for charging because it is under maintenance.
-        /// </summary>
-        OutOfService        = 2,
-
-        /// <summary>
-        /// The EVSE is ready to charge.
-        /// </summary>
-        Operational         = 3,
-
-
-        /// <summary>
-        /// The EVSE was not found!
+        /// The parking spot was not found!
         /// (Only valid within batch-processing)
         /// </summary>
-        UnknownEVSE         = 4
+        UnknownParkingSpot  = 8
 
     }
 

@@ -46,7 +46,8 @@ namespace org.GraphDefined.WWCP
         /// <summary>
         /// The regular expression for parsing a charging station identification.
         /// </summary>
-        public    const    String  ChargingStationId_RegEx  = @"^([A-Za-z]{2}\*?[A-Za-z0-9]{3})\*?S([A-Z0-9][A-Z0-9\*]{0,30})$ | ^(\+?[0-9]{1,3}\*?[0-9]{3})\*?S([A-Z0-9][A-Z0-9\*]{0,30})$";
+        public    const    String  ChargingStationId_RegEx  = @"^([A-Za-z]{2}\*?[A-Za-z0-9]{3})\*?S([A-Z0-9][A-Z0-9\*]{0,30})$ | ^(\+?[0-9]{1,3}\*?[0-9]{3})\*?S([A-Z0-9][A-Z0-9\*]{0,30}) | " +
+                                                              @"^([A-Za-z]{2}\*?[A-Za-z0-9]{3})\*?([A-Z0-9][A-Z0-9\*]{0,30})$ | ^(\+?[0-9]{1,3}\*?[0-9]{3})\*?([A-Z0-9][A-Z0-9\*]{0,30})$";
 
         /// <summary>
         /// The regular expression for parsing a charging station identification.
@@ -409,6 +410,15 @@ namespace org.GraphDefined.WWCP
                                               _MatchCollection[0].Groups[4].Value,
                                               IdFormatType.OLD);
 
+            if (EVSEOperator_Id.TryParse(_MatchCollection[0].Groups[5].Value, out __EVSEOperatorId))
+                return new ChargingStation_Id(__EVSEOperatorId,
+                                              _MatchCollection[0].Groups[6].Value,
+                                              IdFormatType.OLD);
+
+            if (EVSEOperator_Id.TryParse(_MatchCollection[0].Groups[7].Value, out __EVSEOperatorId))
+                return new ChargingStation_Id(__EVSEOperatorId,
+                                              _MatchCollection[0].Groups[8].Value,
+                                              IdFormatType.OLD);
 
             throw new ArgumentException("Illegal charging station identification '" + Text + "'!", "Text");
 
@@ -499,6 +509,30 @@ namespace org.GraphDefined.WWCP
 
                     ChargingStationId = new ChargingStation_Id(__EVSEOperatorId,
                                                                _MatchCollection[0].Groups[4].Value,
+                                                               IdFormatType.OLD);
+
+                    return true;
+
+                }
+
+                // New format without the 'S'...
+                else if (EVSEOperator_Id.TryParse(_MatchCollection[0].Groups[5].Value, out __EVSEOperatorId))
+                {
+
+                    ChargingStationId = new ChargingStation_Id(__EVSEOperatorId,
+                                                               _MatchCollection[0].Groups[6].Value,
+                                                               IdFormatType.NEW);
+
+                    return true;
+
+                }
+
+                // Old format without the 'S'...
+                else if (EVSEOperator_Id.TryParse(_MatchCollection[0].Groups[7].Value, out __EVSEOperatorId))
+                {
+
+                    ChargingStationId = new ChargingStation_Id(__EVSEOperatorId,
+                                                               _MatchCollection[0].Groups[8].Value,
                                                                IdFormatType.OLD);
 
                     return true;

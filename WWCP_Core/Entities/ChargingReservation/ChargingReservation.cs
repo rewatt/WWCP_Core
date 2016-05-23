@@ -18,7 +18,6 @@
 #region Usings
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 
 using org.GraphDefined.Vanaheimr.Illias;
@@ -71,49 +70,6 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region IsExpired
-
-        private Boolean _IsExpired;
-
-        /// <summary>
-        /// returns true if the charging reservation is expired.
-        /// </summary>
-        [InternalUseOnly]
-        public Boolean IsExpired
-        {
-
-            get
-            {
-                return _IsExpired;
-            }
-
-            set
-            {
-                if (_IsExpired == false && value == true)
-                {
-                    _IsExpired = true;
-                }
-            }
-
-        }
-
-        #endregion
-
-        #region ProviderId
-
-        private readonly EVSP_Id _ProviderId;
-
-        [Optional]
-        public EVSP_Id ProviderId
-        {
-            get
-            {
-                return _ProviderId;
-            }
-        }
-
-        #endregion
-
         #region StartTime
 
         private readonly DateTime _StartTime;
@@ -144,6 +100,60 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region TimeLeft
+
+        public TimeSpan TimeLeft
+        {
+            get
+            {
+
+                var _TimeLeft = _EndTime - DateTime.Now.ToUniversalTime();// _StartTime + _Duration - DateTime.Now;
+
+                return _ChargingSession == null
+                           ? _TimeLeft.TotalSeconds > 0 ? _TimeLeft : TimeSpan.FromSeconds(0)
+                           : TimeSpan.FromSeconds(0);
+
+            }
+        }
+
+        #endregion
+
+        #region EndTime
+
+        private DateTime _EndTime;
+
+        [Mandatory]
+        public DateTime EndTime
+        {
+
+            get
+            {
+                return _EndTime;
+            }
+
+            set
+            {
+                _EndTime = value;
+            }
+
+        }
+
+        #endregion
+
+        #region ConsumedReservationTime
+
+        private TimeSpan _ConsumedReservationTime;
+
+        [Mandatory]
+        public TimeSpan ConsumedReservationTime
+        {
+            get
+            {
+                return _ConsumedReservationTime;
+            }
+        }
+
+        #endregion
 
         #region ReservationLevel
 
@@ -159,6 +169,38 @@ namespace org.GraphDefined.WWCP
         }
 
         #endregion
+
+
+        #region ProviderId
+
+        private readonly EVSP_Id _ProviderId;
+
+        [Optional]
+        public EVSP_Id ProviderId
+        {
+            get
+            {
+                return _ProviderId;
+            }
+        }
+
+        #endregion
+
+        #region eMAId
+
+        private readonly eMA_Id _eMAId;
+
+        [Optional]
+        public eMA_Id eMAId
+        {
+            get
+            {
+                return _eMAId;
+            }
+        }
+
+        #endregion
+
 
         #region RoamingNetwork
 
@@ -236,9 +278,32 @@ namespace org.GraphDefined.WWCP
         #endregion
 
 
+        #region ChargingSession
+
+        private ChargingSession _ChargingSession;
+
+        [Mandatory]
+        public ChargingSession ChargingSession
+        {
+
+            get
+            {
+                return _ChargingSession;
+            }
+
+            set
+            {
+                _ChargingSession = value;
+            }
+
+        }
+
+        #endregion
+
+
         #region AuthTokens
 
-        private readonly IEnumerable<Auth_Token> _AuthTokens;
+        private readonly HashSet<Auth_Token> _AuthTokens;
 
         [Optional]
         public IEnumerable<Auth_Token> AuthTokens
@@ -253,7 +318,7 @@ namespace org.GraphDefined.WWCP
 
         #region eMAIds
 
-        private readonly IEnumerable<eMA_Id> _eMAIds;
+        private readonly HashSet<eMA_Id> _eMAIds;
 
         [Optional]
         public IEnumerable<eMA_Id> eMAIds
@@ -293,16 +358,19 @@ namespace org.GraphDefined.WWCP
         public ChargingReservation(DateTime                  Timestamp,
                                    DateTime                  StartTime,
                                    TimeSpan                  Duration,
-                                   EVSP_Id                   ProviderId,
+                                   DateTime                  EndTime,
+                                   ChargingReservationLevel  ReservationLevel,
 
-                                   ChargingReservationLevel  ChargingReservationLevel,
-                                   RoamingNetwork            RoamingNetwork,
+                                   EVSP_Id                   ProviderId         = null,
+                                   eMA_Id                    eMAId              = null,
+
+                                   RoamingNetwork            RoamingNetwork     = null,
                                    ChargingPool_Id           ChargingPoolId     = null,
                                    ChargingStation_Id        ChargingStationId  = null,
                                    EVSE_Id                   EVSEId             = null,
                                    ChargingProduct_Id        ChargingProductId  = null,
 
-                                   IEnumerable<Auth_Token>   AuthTokens            = null,
+                                   IEnumerable<Auth_Token>   AuthTokens         = null,
                                    IEnumerable<eMA_Id>       eMAIds             = null,
                                    IEnumerable<UInt32>       PINs               = null)
 
@@ -310,9 +378,13 @@ namespace org.GraphDefined.WWCP
                    Timestamp,
                    StartTime,
                    Duration,
-                   ProviderId,
+                   EndTime,
+                   TimeSpan.FromSeconds(0),
+                   ReservationLevel,
 
-                   ChargingReservationLevel,
+                   ProviderId,
+                   eMAId,
+
                    RoamingNetwork,
                    ChargingPoolId,
                    ChargingStationId,
@@ -336,40 +408,95 @@ namespace org.GraphDefined.WWCP
                                    DateTime                  Timestamp,
                                    DateTime                  StartTime,
                                    TimeSpan                  Duration,
-                                   EVSP_Id                   ProviderId,
-
+                                   DateTime                  EndTime,
+                                   TimeSpan                  ConsumedReservationTime,
                                    ChargingReservationLevel  ReservationLevel,
-                                   RoamingNetwork            RoamingNetwork,
+
+                                   EVSP_Id                   ProviderId         = null,
+                                   eMA_Id                    eMAId              = null,
+
+                                   RoamingNetwork            RoamingNetwork     = null,
                                    ChargingPool_Id           ChargingPoolId     = null,
                                    ChargingStation_Id        ChargingStationId  = null,
                                    EVSE_Id                   EVSEId             = null,
                                    ChargingProduct_Id        ChargingProductId  = null,
 
-                                   IEnumerable<Auth_Token>   AuthTokens            = null,
+                                   IEnumerable<Auth_Token>   AuthTokens         = null,
                                    IEnumerable<eMA_Id>       eMAIds             = null,
                                    IEnumerable<UInt32>       PINs               = null)
 
         {
 
-            this._Timestamp          = Timestamp;
-            this._ReservationId      = ReservationId;
-            this._StartTime          = StartTime;
-            this._Duration           = Duration;
+            #region Initial checks
 
-            this._ReservationLevel   = ReservationLevel;
-            this._RoamingNetwork     = RoamingNetwork;
-            this._ChargingPoolId     = ChargingPoolId;
-            this._ChargingStationId  = ChargingStationId;
-            this._EVSEId             = EVSEId;
-            this._ChargingProductId  = ChargingProductId;
+            if (ReservationId == null)
+                throw new ArgumentNullException(nameof(ReservationId), "The given charging reservation identification must not be null!");
 
-            this._AuthTokens            = AuthTokens != null ? AuthTokens : new Auth_Token[0];
-            this._eMAIds             = eMAIds  != null ? eMAIds  : new eMA_Id[0];
-            this._PINs               = PINs    != null ? PINs    : new UInt32[0];
+            #endregion
+
+            this._ReservationId            = ReservationId;
+            this._Timestamp                = Timestamp.ToUniversalTime();
+            this._StartTime                = StartTime.ToUniversalTime();
+            this._Duration                 = Duration;
+            this._EndTime                  = StartTime.ToUniversalTime() + Duration;
+            this._ConsumedReservationTime  = ConsumedReservationTime;
+            this._ReservationLevel         = ReservationLevel;
+
+            this._ProviderId               = ProviderId;
+            this._eMAId                    = eMAId;
+
+            this._RoamingNetwork           = RoamingNetwork;
+            this._ChargingPoolId           = ChargingPoolId;
+            this._ChargingStationId        = ChargingStationId;
+            this._EVSEId                   = EVSEId;
+            this._ChargingProductId        = ChargingProductId;
+
+            this._AuthTokens               = AuthTokens != null ? new HashSet<Auth_Token>(AuthTokens) : new HashSet<Auth_Token>();
+            this._eMAIds                   = eMAIds     != null ? new HashSet<eMA_Id>    (eMAIds)     : new HashSet<eMA_Id>();
+            this._PINs                     = PINs       != null ? new HashSet<UInt32>    (PINs)       : new HashSet<UInt32>();
 
         }
 
         #endregion
+
+        #endregion
+
+
+        #region IsExpired()
+
+        /// <summary>
+        /// Returns true if the reservation is expired.
+        /// </summary>
+        public Boolean IsExpired()
+        {
+
+            return _ChargingSession == null
+                       ? DateTime.Now.ToUniversalTime() > _EndTime
+                       : false;
+
+        }
+
+        #endregion
+
+        #region IsExpired(ReservationSelfCancelAfter)
+
+        /// <summary>
+        /// Returns true if the reservation is expired.
+        /// </summary>
+        public Boolean IsExpired(TimeSpan ReservationSelfCancelAfter)
+        {
+            return DateTime.Now.ToUniversalTime() > (_EndTime + ReservationSelfCancelAfter);
+        }
+
+        #endregion
+
+
+        #region AddToConsumedReservationTime(Time)
+
+        public void AddToConsumedReservationTime(TimeSpan Time)
+        {
+            _ConsumedReservationTime = _ConsumedReservationTime.Add(Time);
+        }
 
         #endregion
 

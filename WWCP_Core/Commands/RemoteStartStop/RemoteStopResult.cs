@@ -66,6 +66,23 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region ChargeDetailRecord
+
+        private readonly ChargeDetailRecord _ChargeDetailRecord;
+
+        /// <summary>
+        /// The charge detail record for a successfully stopped charging process.
+        /// </summary>
+        public ChargeDetailRecord ChargeDetailRecord
+        {
+            get
+            {
+                return _ChargeDetailRecord;
+            }
+        }
+
+        #endregion
+
         #region ReservationId
 
         private readonly ChargingReservation_Id _ReservationId;
@@ -180,6 +197,38 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region RemoteStopEVSEResult(ChargeDetailRecord, Result, ReservationId, ReservationHandling)
+
+        /// <summary>
+        /// Create a new remote stop result.
+        /// </summary>
+        /// <param name="ChargeDetailRecord">The charge detail record for a successfully stopped charging process.</param>
+        /// <param name="Result">The result of the remote stop request.</param>
+        /// <param name="ReservationId">The optional charging reservation identification of the charging session.</param>
+        /// <param name="ReservationHandling">The handling of the charging reservation after the charging session stopped.</param>
+        private RemoteStopResult(ChargeDetailRecord      ChargeDetailRecord,
+                                 RemoteStopResultType    Result,
+                                 ChargingReservation_Id  ReservationId,
+                                 ReservationHandling     ReservationHandling)
+        {
+
+            #region Initial checks
+
+            if (ChargeDetailRecord == null)
+                throw new ArgumentNullException(nameof(ChargeDetailRecord), "The given charge detail record must not be null!");
+
+            #endregion
+
+            this._ChargeDetailRecord   = ChargeDetailRecord;
+            this._SessionId            = ChargeDetailRecord.SessionId;
+            this._Result               = Result;
+            this._ReservationId        = ReservationId;
+            this._ReservationHandling  = ReservationHandling != null ? ReservationHandling : ReservationHandling.Close;
+
+        }
+
+        #endregion
+
         #endregion
 
 
@@ -246,6 +295,38 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region (static) InvalidCredentials(SessionId)
+
+        /// <summary>
+        /// Unauthorized remote stop or invalid credentials.
+        /// </summary>
+        /// <param name="SessionId">The unique charging session identification.</param>
+        public static RemoteStopResult InvalidCredentials(ChargingSession_Id SessionId)
+        {
+            return new RemoteStopResult(SessionId,
+                                        RemoteStopResultType.InvalidCredentials,
+                                        "Unauthorized remote stop or invalid credentials!");
+        }
+
+        #endregion
+
+        #region (static) InternalUse(SessionId)
+
+        /// <summary>
+        /// Reserved for internal use!
+        /// </summary>
+        /// <param name="SessionId">The unique charging session identification.</param>
+        public static RemoteStopResult InternalUse(ChargingSession_Id SessionId)
+        {
+
+            return new RemoteStopResult(SessionId,
+                                        RemoteStopResultType.InternalUse,
+                                        "Reserved for internal use!");
+
+        }
+
+        #endregion
+
         #region (static) OutOfService(SessionId)
 
         /// <summary>
@@ -294,6 +375,28 @@ namespace org.GraphDefined.WWCP
         {
 
             return new RemoteStopResult(SessionId,
+                                        RemoteStopResultType.Success,
+                                        ReservationId,
+                                        ReservationHandling);
+
+        }
+
+        #endregion
+
+        #region (static) Success(ChargeDetailRecord, ReservationId = null, ReservationHandling = null)
+
+        /// <summary>
+        /// The remote stop was successful.
+        /// </summary>
+        /// <param name="ChargeDetailRecord">The charge detail record for a successfully stopped charging process.</param>
+        /// <param name="ReservationId">The optional charging reservation identification of the charging session.</param>
+        /// <param name="ReservationHandling">The handling of the charging reservation after the charging session stopped.</param>
+        public static RemoteStopResult Success(ChargeDetailRecord      ChargeDetailRecord,
+                                               ChargingReservation_Id  ReservationId        = null,
+                                               ReservationHandling     ReservationHandling  = null)
+        {
+
+            return new RemoteStopResult(ChargeDetailRecord,
                                         RemoteStopResultType.Success,
                                         ReservationId,
                                         ReservationHandling);
@@ -373,6 +476,16 @@ namespace org.GraphDefined.WWCP
         /// The charging session identification is unknown or invalid.
         /// </summary>
         InvalidSessionId,
+
+        /// <summary>
+        /// Unauthorized remote stop or invalid credentials.
+        /// </summary>
+        InvalidCredentials,
+
+        /// <summary>
+        /// Reserved for internal use.
+        /// </summary>
+        InternalUse,
 
         /// <summary>
         /// The EVSE or charging station is out of service.

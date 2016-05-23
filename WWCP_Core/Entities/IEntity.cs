@@ -29,7 +29,7 @@ namespace org.GraphDefined.WWCP
 
         DateTime                                    LastChange { get; }
 
-        event PropertyChanged_EventHandler          OnPropertyChanged;
+        event OnPropertyChangedDelegate          OnPropertyChanged;
 
     }
 

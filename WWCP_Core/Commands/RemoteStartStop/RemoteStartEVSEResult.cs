@@ -66,18 +66,18 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region ErrorMessage
+        #region Message
 
-        private readonly String _ErrorMessage;
+        private readonly String _Message;
 
         /// <summary>
-        /// An optional error message.
+        /// An optional (error) message.
         /// </summary>
-        public String ErrorMessage
+        public String Message
         {
             get
             {
-                return _ErrorMessage;
+                return _Message;
             }
         }
 
@@ -87,22 +87,20 @@ namespace org.GraphDefined.WWCP
 
         #region Constructor(s)
 
-        #region (private) RemoteStartResult(Result)
+        #region (private) RemoteStartResult(Result, Message = null)
 
         /// <summary>
         /// Create a new remote start result.
         /// </summary>
         /// <param name="Result">The result of the remote start operation.</param>
-        private RemoteStartEVSEResult(RemoteStartEVSEResultType  Result)
+        /// <param name="Message">An optional message.</param>
+        private RemoteStartEVSEResult(RemoteStartEVSEResultType  Result,
+                                      String                     Message = null)
         {
 
-            if (Result == RemoteStartEVSEResultType.Success ||
-                Result == RemoteStartEVSEResultType.Error)
-                throw new ArgumentException("Invalid parameter!");
-
-            this._Result        = Result;
-            this._Session       = null;
-            this._ErrorMessage  = null;
+            this._Result   = Result;
+            this._Session  = null;
+            this._Message  = Message;
 
         }
 
@@ -113,29 +111,36 @@ namespace org.GraphDefined.WWCP
         /// <summary>
         /// Create a new successful remote start result.
         /// </summary>
-        /// <param name="Session">The charging session (mandatory for successful session starts).</param>
-        private RemoteStartEVSEResult(ChargingSession  Session)
+        /// <param name="Session">The charging session.</param>
+        private RemoteStartEVSEResult(ChargingSession Session)
         {
 
-            this._Result        = RemoteStartEVSEResultType.Success;
-            this._Session       = Session;
-            this._ErrorMessage  = null;
+            #region Initial checks
+
+            if (Session == null)
+                throw new ArgumentNullException(nameof(Session), "The given charging session must not be null!");
+
+            #endregion
+
+            this._Result   = RemoteStartEVSEResultType.Success;
+            this._Session  = Session;
+            this._Message  = null;
 
         }
 
         #endregion
 
-        #region (private) RemoteStartResult(ErrorMessage = null)
+        #region (private) RemoteStartResult(Message)
 
         /// <summary>
         /// Create a new remote start result.
         /// </summary>
-        /// <param name="ErrorMessage">An error message.</param>
-        private RemoteStartEVSEResult(String ErrorMessage = null)
+        /// <param name="Message">An (error) message.</param>
+        private RemoteStartEVSEResult(String Message)
         {
 
-            this._Result        = RemoteStartEVSEResultType.Error;
-            this._ErrorMessage  = ErrorMessage != null ? ErrorMessage : String.Empty;
+            this._Result   = RemoteStartEVSEResultType.Error;
+            this._Message  = Message;
 
         }
 
@@ -204,6 +209,21 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
+        #region (static) InvalidCredentials
+
+        /// <summary>
+        /// Unauthorized remote start or invalid credentials.
+        /// </summary>
+        public static RemoteStartEVSEResult InvalidCredentials
+        {
+            get
+            {
+                return new RemoteStartEVSEResult(RemoteStartEVSEResultType.InvalidCredentials);
+            }
+        }
+
+        #endregion
+
         #region (static) AlreadyInUse
 
         /// <summary>
@@ -219,16 +239,29 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region (static) Reserved
+        #region (static) Reserved(Message)
 
         /// <summary>
         /// The EVSE is reserved.
         /// </summary>
-        public static RemoteStartEVSEResult Reserved
+        /// <param name="Message">An optional message.</param>
+        public static RemoteStartEVSEResult Reserved(String Message = null)
+        {
+            return new RemoteStartEVSEResult(RemoteStartEVSEResultType.Reserved, Message);
+        }
+
+        #endregion
+
+        #region (static) InternalUse
+
+        /// <summary>
+        /// The EVSE is reserved for internal use.
+        /// </summary>
+        public static RemoteStartEVSEResult InternalUse
         {
             get
             {
-                return new RemoteStartEVSEResult(RemoteStartEVSEResultType.Reserved);
+                return new RemoteStartEVSEResult(RemoteStartEVSEResultType.InternalUse);
             }
         }
 
@@ -264,10 +297,26 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region (static) Success(Session)
+        #region (static) Success()
 
         /// <summary>
         /// The remote start was successful.
+        /// The charging session will be send separately.
+        /// </summary>
+        public static RemoteStartEVSEResult Success()
+        {
+
+            return new RemoteStartEVSEResult(RemoteStartEVSEResultType.Success);
+
+        }
+
+        #endregion
+
+        #region (static) Success(Session)
+
+        /// <summary>
+        /// The remote start was successful and a charging session
+        /// will be embedded within the response.
         /// </summary>
         /// <param name="Session">The charging session.</param>
         public static RemoteStartEVSEResult Success(ChargingSession Session)
@@ -276,7 +325,7 @@ namespace org.GraphDefined.WWCP
             #region Initial checks
 
             if (Session == null)
-                throw new ArgumentNullException("Session", "The given charging session must not be null!");
+                throw new ArgumentNullException(nameof(Session), "The given charging session must not be null!");
 
             #endregion
 
@@ -297,6 +346,22 @@ namespace org.GraphDefined.WWCP
             {
                 return new RemoteStartEVSEResult(RemoteStartEVSEResultType.Timeout);
             }
+        }
+
+        #endregion
+
+        #region (static) CommunicationError(Message = "")
+
+        /// <summary>
+        /// A communication error occured.
+        /// </summary>
+        /// <param name="Message">An optional (error)message.</param>
+        public static RemoteStartEVSEResult CommunicationError(String  Message = "")
+        {
+
+            return new RemoteStartEVSEResult(RemoteStartEVSEResultType.CommunicationError,
+                                             Message);
+
         }
 
         #endregion
@@ -341,6 +406,7 @@ namespace org.GraphDefined.WWCP
         /// </summary>
         Unspecified,
 
+
         /// <summary>
         /// The EVSE operator is unknown.
         /// </summary>
@@ -351,10 +417,16 @@ namespace org.GraphDefined.WWCP
         /// </summary>
         UnknownEVSE,
 
+
         /// <summary>
         /// The given charging session identification is unknown or invalid.
         /// </summary>
         InvalidSessionId,
+
+        /// <summary>
+        /// Unauthorized remote start or invalid credentials.
+        /// </summary>
+        InvalidCredentials,
 
         /// <summary>
         /// The EVSE is already in use.
@@ -365,6 +437,11 @@ namespace org.GraphDefined.WWCP
         /// The EVSE is reserved.
         /// </summary>
         Reserved,
+
+        /// <summary>
+        /// The EVSE is reserved for internal use.
+        /// </summary>
+        InternalUse,
 
         /// <summary>
         /// The EVSE is out of service.
@@ -381,10 +458,16 @@ namespace org.GraphDefined.WWCP
         /// </summary>
         Success,
 
+
         /// <summary>
         /// The remote stop ran into a timeout.
         /// </summary>
         Timeout,
+
+        /// <summary>
+        /// A communication error occured.
+        /// </summary>
+        CommunicationError,
 
         /// <summary>
         /// The remote stop led to an error.

@@ -23,7 +23,6 @@ using System.Collections.Generic;
 
 using org.GraphDefined.Vanaheimr.Illias;
 using org.GraphDefined.Vanaheimr.Aegir;
-using org.GraphDefined.WWCP;
 
 #endregion
 
@@ -35,7 +34,7 @@ namespace org.GraphDefined.WWCP.Importer
 
         #region Data
 
-        private Action<DateTime, ImporterForwardingInfo, RoamingNetwork_Id, RoamingNetwork_Id> _OnForwardingChangeCallback;
+        private Action<DateTime, ImporterForwardingInfo, RoamingNetwork_Id, RoamingNetwork_Id> _OnForwardingChanged;
 
         public String         StationName;
         public String         StationServiceTag;
@@ -143,10 +142,10 @@ namespace org.GraphDefined.WWCP.Importer
 
                 _ForwardedToEVSEOperator = value;
 
-                this._OnForwardingChangeCallback(DateTime.Now,
-                                                 this,
-                                                 Old_ForwardedToEVSEOperator != null ? Old_ForwardedToEVSEOperator.RoamingNetwork.Id : null,
-                                                 value                       != null ? value.RoamingNetwork.Id                       : null);
+                this._OnForwardingChanged(DateTime.Now,
+                                          this,
+                                          Old_ForwardedToEVSEOperator != null ? Old_ForwardedToEVSEOperator.RoamingNetwork.Id : null,
+                                          value                       != null ? value.RoamingNetwork.Id                       : null);
 
             }
 
@@ -166,6 +165,27 @@ namespace org.GraphDefined.WWCP.Importer
                             : null;
 
             }
+        }
+
+        #endregion
+
+        #region PhoneNumber
+
+        private String _PhoneNumber;
+
+        public String PhoneNumber
+        {
+
+            get
+            {
+                return _PhoneNumber;
+            }
+
+            set
+            {
+                _PhoneNumber = value;
+            }
+
         }
 
         #endregion
@@ -252,13 +272,14 @@ namespace org.GraphDefined.WWCP.Importer
                                       Address                                       StationAddress            = null,
                                       GeoCoordinate                                 StationGeoCoordinate      = null,
                                       IEnumerable<EVSE_Id>                          EVSEIds                   = null,
+                                      String                                        PhoneNumber               = null,
                                       Timestamped<ChargingStationAdminStatusType>?  AdminStatus               = null,
                                       DateTime?                                     Created                   = null,
                                       Boolean                                       OutOfService              = false,
                                       EVSEOperator                                  ForwardedToEVSEOperator   = null)
         {
 
-            this._OnForwardingChangeCallback  = OnChangedCallback;
+            this._OnForwardingChanged         = OnChangedCallback;
             this._EVSEOperators               = EVSEOperators;
             this._EVSEIds                     = EVSEIds              != null ? new HashSet<EVSE_Id>(EVSEIds) : new HashSet<EVSE_Id>();
             this._StationId                   = StationId            != null ? StationId                     : ChargingStation_Id.Create(EVSEIds);
@@ -267,6 +288,7 @@ namespace org.GraphDefined.WWCP.Importer
             this.StationAddress               = StationAddress;
             this.StationGeoCoordinate         = StationGeoCoordinate != null ? StationGeoCoordinate          : new GeoCoordinate(new Latitude(0), new Longitude(0));
             this._AdminStatus                 = AdminStatus          != null ? AdminStatus.Value             : new Timestamped<ChargingStationAdminStatusType>(ChargingStationAdminStatusType.Operational);
+            this._PhoneNumber                 = PhoneNumber;
             this._Created                     = Created              != null ? Created.Value                 : DateTime.Now;
             this._OutOfService                = OutOfService;
             this._LastTimeSeen                = _Created;

@@ -25,10 +25,10 @@ namespace org.GraphDefined.WWCP
 {
 
     /// <summary>
-    /// The current status of an EVSE.
+    /// The current admin status of an EVSE.
     /// </summary>
-    public class EVSEStatus : IEquatable<EVSEStatus>,
-                              IComparable<EVSEStatus>
+    public class EVSEAdminStatus : IEquatable<EVSEAdminStatus>,
+                                   IComparable<EVSEAdminStatus>
     {
 
         #region Properties
@@ -38,7 +38,7 @@ namespace org.GraphDefined.WWCP
         private readonly EVSE_Id _Id;
 
         /// <summary>
-        /// The unique identification of the EVSE.
+        /// The unique identification of an EVSE.
         /// </summary>
         public EVSE_Id Id
         {
@@ -52,12 +52,12 @@ namespace org.GraphDefined.WWCP
 
         #region Status
 
-        private readonly EVSEStatusType _Status;
+        private readonly EVSEAdminStatusType _Status;
 
         /// <summary>
-        /// The current status of the EVSE.
+        /// The current status of an EVSE.
         /// </summary>
-        public EVSEStatusType Status
+        public EVSEAdminStatusType Status
         {
             get
             {
@@ -91,12 +91,12 @@ namespace org.GraphDefined.WWCP
         /// <summary>
         /// Create a new EVSE status.
         /// </summary>
-        /// <param name="Id">The unique identification of the EVSE.</param>
-        /// <param name="Status">The current status of the EVSE.</param>
+        /// <param name="Id">The unique identification of an EVSE.</param>
+        /// <param name="Status">The current status of an EVSE.</param>
         /// <param name="Timestamp">The timestamp of the current status of the EVSE.</param>
-        public EVSEStatus(EVSE_Id         Id,
-                          EVSEStatusType  Status,
-                          DateTime        Timestamp)
+        public EVSEAdminStatus(EVSE_Id              Id,
+                               EVSEAdminStatusType  Status,
+                               DateTime             Timestamp)
 
         {
 
@@ -119,15 +119,15 @@ namespace org.GraphDefined.WWCP
         #region (static) Snapshot(EVSE)
 
         /// <summary>
-        /// Take a snapshot of the current EVSE status.
+        /// Take a snapshot of the current EVSE admin status.
         /// </summary>
         /// <param name="EVSE">An EVSE.</param>
-        public static EVSEStatus Snapshot(EVSE EVSE)
+        public static EVSEAdminStatus Snapshot(EVSE EVSE)
         {
 
-            return new EVSEStatus(EVSE.Id,
-                                  EVSE.Status.Value,
-                                  EVSE.Status.Timestamp);
+            return new EVSEAdminStatus(EVSE.Id,
+                                       EVSE.AdminStatus.Value,
+                                       EVSE.AdminStatus.Timestamp);
 
         }
 
@@ -136,119 +136,119 @@ namespace org.GraphDefined.WWCP
 
         #region Operator overloading
 
-        #region Operator == (EVSEStatus1, EVSEStatus2)
+        #region Operator == (EVSEAdminStatus1, EVSEAdminStatus2)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus1">A EVSEStatus.</param>
-        /// <param name="EVSEStatus2">Another EVSEStatus.</param>
+        /// <param name="EVSEAdminStatus1">An EVSE admin status.</param>
+        /// <param name="EVSEAdminStatus2">Another EVSE admin status.</param>
         /// <returns>true|false</returns>
-        public static Boolean operator == (EVSEStatus EVSEStatus1, EVSEStatus EVSEStatus2)
+        public static Boolean operator == (EVSEAdminStatus EVSEAdminStatus1, EVSEAdminStatus EVSEAdminStatus2)
         {
 
             // If both are null, or both are same instance, return true.
-            if (Object.ReferenceEquals(EVSEStatus1, EVSEStatus2))
+            if (Object.ReferenceEquals(EVSEAdminStatus1, EVSEAdminStatus2))
                 return true;
 
             // If one is null, but not both, return false.
-            if (((Object) EVSEStatus1 == null) || ((Object) EVSEStatus2 == null))
+            if (((Object) EVSEAdminStatus1 == null) || ((Object) EVSEAdminStatus2 == null))
                 return false;
 
-            return EVSEStatus1.Equals(EVSEStatus2);
+            return EVSEAdminStatus1.Equals(EVSEAdminStatus2);
 
         }
 
         #endregion
 
-        #region Operator != (EVSEStatus1, EVSEStatus2)
+        #region Operator != (EVSEAdminStatus1, EVSEAdminStatus2)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus1">A EVSEStatus.</param>
-        /// <param name="EVSEStatus2">Another EVSEStatus.</param>
+        /// <param name="EVSEAdminStatus1">An EVSE admin status.</param>
+        /// <param name="EVSEAdminStatus2">Another EVSE admin status.</param>
         /// <returns>true|false</returns>
-        public static Boolean operator != (EVSEStatus EVSEStatus1, EVSEStatus EVSEStatus2)
+        public static Boolean operator != (EVSEAdminStatus EVSEAdminStatus1, EVSEAdminStatus EVSEAdminStatus2)
         {
-            return !(EVSEStatus1 == EVSEStatus2);
+            return !(EVSEAdminStatus1 == EVSEAdminStatus2);
         }
 
         #endregion
 
-        #region Operator <  (EVSEStatus1, EVSEStatus2)
+        #region Operator <  (EVSEAdminStatus1, EVSEAdminStatus2)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus1">A EVSEStatus.</param>
-        /// <param name="EVSEStatus2">Another EVSEStatus.</param>
+        /// <param name="EVSEAdminStatus1">An EVSE admin status.</param>
+        /// <param name="EVSEAdminStatus2">Another EVSE admin status.</param>
         /// <returns>true|false</returns>
-        public static Boolean operator < (EVSEStatus EVSEStatus1, EVSEStatus EVSEStatus2)
+        public static Boolean operator < (EVSEAdminStatus EVSEAdminStatus1, EVSEAdminStatus EVSEAdminStatus2)
         {
 
-            if ((Object) EVSEStatus1 == null)
-                throw new ArgumentNullException("The given EVSEStatus1 must not be null!");
+            if ((Object) EVSEAdminStatus1 == null)
+                throw new ArgumentNullException("The given EVSEAdminStatus1 must not be null!");
 
-            return EVSEStatus1.CompareTo(EVSEStatus2) < 0;
+            return EVSEAdminStatus1.CompareTo(EVSEAdminStatus2) < 0;
 
         }
 
         #endregion
 
-        #region Operator <= (EVSEStatus1, EVSEStatus2)
+        #region Operator <= (EVSEAdminStatus1, EVSEAdminStatus2)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus1">A EVSEStatus.</param>
-        /// <param name="EVSEStatus2">Another EVSEStatus.</param>
+        /// <param name="EVSEAdminStatus1">An EVSE admin status.</param>
+        /// <param name="EVSEAdminStatus2">Another EVSE admin status.</param>
         /// <returns>true|false</returns>
-        public static Boolean operator <= (EVSEStatus EVSEStatus1, EVSEStatus EVSEStatus2)
+        public static Boolean operator <= (EVSEAdminStatus EVSEAdminStatus1, EVSEAdminStatus EVSEAdminStatus2)
         {
-            return !(EVSEStatus1 > EVSEStatus2);
+            return !(EVSEAdminStatus1 > EVSEAdminStatus2);
         }
 
         #endregion
 
-        #region Operator >  (EVSEStatus1, EVSEStatus2)
+        #region Operator >  (EVSEAdminStatus1, EVSEAdminStatus2)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus1">A EVSEStatus.</param>
-        /// <param name="EVSEStatus2">Another EVSEStatus.</param>
+        /// <param name="EVSEAdminStatus1">An EVSE admin status.</param>
+        /// <param name="EVSEAdminStatus2">Another EVSE admin status.</param>
         /// <returns>true|false</returns>
-        public static Boolean operator > (EVSEStatus EVSEStatus1, EVSEStatus EVSEStatus2)
+        public static Boolean operator > (EVSEAdminStatus EVSEAdminStatus1, EVSEAdminStatus EVSEAdminStatus2)
         {
 
-            if ((Object) EVSEStatus1 == null)
-                throw new ArgumentNullException("The given EVSEStatus1 must not be null!");
+            if ((Object) EVSEAdminStatus1 == null)
+                throw new ArgumentNullException("The given EVSEAdminStatus1 must not be null!");
 
-            return EVSEStatus1.CompareTo(EVSEStatus2) > 0;
+            return EVSEAdminStatus1.CompareTo(EVSEAdminStatus2) > 0;
 
         }
 
         #endregion
 
-        #region Operator >= (EVSEStatus1, EVSEStatus2)
+        #region Operator >= (EVSEAdminStatus1, EVSEAdminStatus2)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus1">A EVSEStatus.</param>
-        /// <param name="EVSEStatus2">Another EVSEStatus.</param>
+        /// <param name="EVSEAdminStatus1">An EVSE admin status.</param>
+        /// <param name="EVSEAdminStatus2">Another EVSE admin status.</param>
         /// <returns>true|false</returns>
-        public static Boolean operator >= (EVSEStatus EVSEStatus1, EVSEStatus EVSEStatus2)
+        public static Boolean operator >= (EVSEAdminStatus EVSEAdminStatus1, EVSEAdminStatus EVSEAdminStatus2)
         {
-            return !(EVSEStatus1 < EVSEStatus2);
+            return !(EVSEAdminStatus1 < EVSEAdminStatus2);
         }
 
         #endregion
 
         #endregion
 
-        #region IComparable<EVSEStatus> Members
+        #region IComparable<EVSEAdminStatus> Members
 
         #region CompareTo(Object)
 
@@ -262,35 +262,35 @@ namespace org.GraphDefined.WWCP
             if (Object == null)
                 throw new ArgumentNullException("The given object must not be null!");
 
-            // Check if the given object is an EVSEStatus.
-            var EVSEStatus = Object as EVSEStatus;
-            if ((Object) EVSEStatus == null)
-                throw new ArgumentException("The given object is not a EVSEStatus!");
+            // Check if the given object is an EVSEAdminStatus.
+            var EVSEAdminStatus = Object as EVSEAdminStatus;
+            if ((Object) EVSEAdminStatus == null)
+                throw new ArgumentException("The given object is not a EVSEAdminStatus!");
 
-            return CompareTo(EVSEStatus);
+            return CompareTo(EVSEAdminStatus);
 
         }
 
         #endregion
 
-        #region CompareTo(EVSEStatus)
+        #region CompareTo(EVSEAdminStatus)
 
         /// <summary>
         /// Compares two instances of this object.
         /// </summary>
-        /// <param name="EVSEStatus">An object to compare with.</param>
-        public Int32 CompareTo(EVSEStatus EVSEStatus)
+        /// <param name="EVSEAdminStatus">An object to compare with.</param>
+        public Int32 CompareTo(EVSEAdminStatus EVSEAdminStatus)
         {
 
-            if ((Object) EVSEStatus == null)
-                throw new ArgumentNullException("The given EVSEStatus must not be null!");
+            if ((Object) EVSEAdminStatus == null)
+                throw new ArgumentNullException(nameof(EVSEAdminStatus), "The given EVSE admin status must not be null!");
 
             // Compare EVSE Ids
-            var _Result = _Id.CompareTo(EVSEStatus._Id);
+            var _Result = _Id.CompareTo(EVSEAdminStatus._Id);
 
             // If equal: Compare EVSE status
             if (_Result == 0)
-                _Result = _Status.CompareTo(EVSEStatus._Status);
+                _Result = _Status.CompareTo(EVSEAdminStatus._Status);
 
             return _Result;
 
@@ -300,7 +300,7 @@ namespace org.GraphDefined.WWCP
 
         #endregion
 
-        #region IEquatable<EVSEStatus> Members
+        #region IEquatable<EVSEAdminStatus> Members
 
         #region Equals(Object)
 
@@ -315,32 +315,32 @@ namespace org.GraphDefined.WWCP
             if (Object == null)
                 return false;
 
-            // Check if the given object is an EVSEStatus.
-            var EVSEStatus = Object as EVSEStatus;
-            if ((Object) EVSEStatus == null)
+            // Check if the given object is an EVSEAdminStatus.
+            var EVSEAdminStatus = Object as EVSEAdminStatus;
+            if ((Object) EVSEAdminStatus == null)
                 return false;
 
-            return this.Equals(EVSEStatus);
+            return this.Equals(EVSEAdminStatus);
 
         }
 
         #endregion
 
-        #region Equals(EVSEStatus)
+        #region Equals(EVSEAdminStatus)
 
         /// <summary>
         /// Compares two EVSE identifications for equality.
         /// </summary>
-        /// <param name="EVSEStatus">An EVSE identification to compare with.</param>
+        /// <param name="EVSEAdminStatus">An EVSE identification to compare with.</param>
         /// <returns>True if both match; False otherwise.</returns>
-        public Boolean Equals(EVSEStatus EVSEStatus)
+        public Boolean Equals(EVSEAdminStatus EVSEAdminStatus)
         {
 
-            if ((Object) EVSEStatus == null)
+            if ((Object) EVSEAdminStatus == null)
                 return false;
 
-            return _Id.    Equals(EVSEStatus._Id) &&
-                   _Status.Equals(EVSEStatus._Status);
+            return _Id.    Equals(EVSEAdminStatus._Id) &&
+                   _Status.Equals(EVSEAdminStatus._Status);
 
         }
 
